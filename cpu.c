@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define MEMORY_SIZE 0xff
+#define MEMORY_SIZE 256
 #define REGISTER_COUNT 4
 
 typedef uint16_t word;
@@ -22,6 +22,8 @@ typedef enum {
 	R4 = 0b11
 } rx;
 
+word extract_register(word instruction);
+word extract_value(word instruction);
 void print_memory(word *memory, word memory_size);
 
 int main(void) {
@@ -40,8 +42,11 @@ int main(void) {
 	// [opcode 4 bits] [register 2 bits] [value 8 bits]
 	memory[0] = (NOP << 12);
 	memory[1] = (LDI << 12) | (R1 << 10) | 1;
-	memory[2] = (ADI << 12) | (R1 << 10) | 1;
-	memory[3] = (JMP << 12) | 2;
+	memory[2] = (SVR << 12) | (R1 << 10) | 0xff;
+	memory[3] = (LDR << 12) | (R2 << 10) | 0xff;
+	memory[4] = (ADI << 12) | (R1 << 10) | 1;
+	memory[5] = (JMP << 12) | 4;
+	memory[6] = (LDI << 12) | (R2 << 10) | 15;
 
 	for(;;) {
 		switch(memory[pc] >> 12) {
@@ -49,22 +54,22 @@ int main(void) {
 				pc++;
 				break;
 			case LDI:
-				registers[memory[pc] & 0xc000] = memory[pc] & 0x00ff;
+				registers[extract_register(memory[pc])] = extract_value(memory[pc]);
 				pc++;
 				break;
 			case ADI:
-				registers[memory[pc] & 0xc000] += memory[pc] & 0x00ff;
+				registers[extract_register(memory[pc])] += extract_value(memory[pc]);
 				pc++;
 				break;
 			case JMP:
 				pc = memory[pc] & 0x00ff;
 				break;
 			case LDR:
-				registers[memory[pc] & 0xc000] = memory[memory[pc] & 0x00ff];
+				registers[extract_register(memory[pc])] = memory[extract_value(memory[pc])];
 				pc++;
 				break;
 			case SVR:
-				memory[memory[pc] & 0x00ff] = registers[memory[pc] & 0xc000];
+				memory[extract_value(memory[pc])] = registers[extract_register(memory[pc])];
 				pc++;
 				break;
 			default:
@@ -85,14 +90,22 @@ int main(void) {
 	return 0;
 }
 
+word extract_register(word instruction) {
+	return (instruction & 0b0000110000000000) >> 10;
+}
+
+word extract_value(word instruction) {
+	return instruction & 0x00ff;
+}
+
 void print_memory(word *memory, word memory_size) {
-	word line_break = 0;
+	uint8_t line_break = 1;
 
 	for(word i; i < memory_size; i++) {
 		printf("%04X ", memory[i]);
 
 		if(line_break > 15) {
-			line_break = 0;
+			line_break = 1;
 			printf("\n");
 		} else {
 			line_break++;
