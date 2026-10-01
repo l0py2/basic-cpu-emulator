@@ -14,3 +14,6 @@
 - 0011 JMP (jump to address)
 - 0100 LDR (load value from memory to register)
 - 0101 SVR (save value from register to memory)
+- 0110 SBI (subtract imeditate from register)
+- 0111 SLI (shift register to the left by imediate)
+- 1000 SRI (shift register to the right by imediate)

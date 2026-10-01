@@ -12,7 +12,10 @@ typedef enum {
 	ADI = 0b0010,
 	JMP = 0b0011,
 	LDR = 0b0100,
-	SVR = 0b0101
+	SVR = 0b0101,
+	SBI = 0b0110,
+	SLI = 0b0111,
+	SRI = 0b1000
 } instruction;
 
 typedef enum {
@@ -41,12 +44,17 @@ int main(void) {
 
 	// [opcode 4 bits] [register 2 bits] [value 8 bits]
 	memory[0] = (NOP << 12);
-	memory[1] = (LDI << 12) | (R1 << 10) | 1;
-	memory[2] = (SVR << 12) | (R1 << 10) | 0xff;
-	memory[3] = (LDR << 12) | (R2 << 10) | 0xff;
-	memory[4] = (ADI << 12) | (R1 << 10) | 1;
-	memory[5] = (JMP << 12) | 4;
-	memory[6] = (LDI << 12) | (R2 << 10) | 15;
+	memory[1] = (LDI << 12) | (R3 << 10) | 1;
+	memory[2] = (SBI << 12) | (R3 << 10) | 3;
+	memory[3] = (LDI << 12) | (R1 << 10) | ((1000 & 0xff00) >> 8); // First byte
+	memory[4] = (SLI << 12) | (R1 << 10) | 8;
+	memory[5] = (ADI << 12) | (R1 << 10) | (1000 & 0x00ff); // Second byte
+	memory[6] = (SBI << 12) | (R1 << 10) | 1;
+	memory[7] = (SVR << 12) | (R1 << 10) | 0xff;
+	memory[8] = (LDR << 12) | (R2 << 10) | 0xff;
+	memory[9] = (ADI << 12) | (R1 << 10) | 1;
+	memory[10] = (JMP << 12) | 9;
+	memory[11] = (LDI << 12) | (R2 << 10) | 15;
 
 	for(;;) {
 		switch(memory[pc] >> 12) {
@@ -70,6 +78,18 @@ int main(void) {
 				break;
 			case SVR:
 				memory[extract_value(memory[pc])] = registers[extract_register(memory[pc])];
+				pc++;
+				break;
+			case SBI:
+				registers[extract_register(memory[pc])] -= extract_value(memory[pc]);
+				pc++;
+				break;
+			case SLI:
+				registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] << extract_value(memory[pc]);
+				pc++;
+				break;
+			case SRI:
+				registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] >> extract_value(memory[pc]);
 				pc++;
 				break;
 			default:
