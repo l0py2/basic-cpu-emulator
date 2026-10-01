@@ -7,10 +7,12 @@
 typedef uint16_t word;
 
 typedef enum {
-	NOP = 0b00,
-	LDI = 0b01,
-	ADI = 0b10,
-	JMP = 0b11
+	NOP = 0b0000,
+	LDI = 0b0001,
+	ADI = 0b0010,
+	JMP = 0b0011,
+	LDR = 0b0100,
+	SVR = 0b0101
 } instruction;
 
 typedef enum {
@@ -35,27 +37,35 @@ int main(void) {
 		registers[i] = 0;
 	}
 
-	// [opcode 2 bits] [register 2 bits] [value 8-12 bits]
-	memory[0] = (NOP << 14);
-	memory[1] = (LDI << 14) | (R1 << 12) | 1;
-	memory[2] = (ADI << 14) | (R1 << 12) | 1;
-	memory[3] = (JMP << 14) | 2;
+	// [opcode 4 bits] [register 2 bits] [value 8 bits]
+	memory[0] = (NOP << 12);
+	memory[1] = (LDI << 12) | (R1 << 10) | 1;
+	memory[2] = (ADI << 12) | (R1 << 10) | 1;
+	memory[3] = (JMP << 12) | 2;
 
 	for(;;) {
-		switch(memory[pc] >> 14) {
+		switch(memory[pc] >> 12) {
 			case NOP:
 				pc++;
 				break;
 			case LDI:
-				registers[memory[pc] & 0x3000] = memory[pc] & 0x0fff;
+				registers[memory[pc] & 0xc000] = memory[pc] & 0x00ff;
 				pc++;
 				break;
 			case ADI:
-				registers[memory[pc] & 0x3000] += memory[pc] & 0x0fff;
+				registers[memory[pc] & 0xc000] += memory[pc] & 0x00ff;
 				pc++;
 				break;
 			case JMP:
 				pc = memory[pc] & 0x00ff;
+				break;
+			case LDR:
+				registers[memory[pc] & 0xc000] = memory[memory[pc] & 0x00ff];
+				pc++;
+				break;
+			case SVR:
+				memory[memory[pc] & 0x00ff] = registers[memory[pc] & 0xc000];
+				pc++;
 				break;
 			default:
 				pc++;
