@@ -19,7 +19,9 @@ typedef enum {
 	CAL = 0b1001,
 	RET = 0b1010,
 	ADD = 0b1011,
-	SUB = 0b1100
+	SUB = 0b1100,
+	PSH = 0b1101,
+	POP = 0b1110
 } instruction;
 
 typedef enum {
@@ -58,27 +60,33 @@ int main(void) {
 	memory[1] = (LDI << 12) | (R3 << 9) | 1;
 	memory[2] = (SBI << 12) | (R3 << 9) | 3;
 
+	// R6 -> stack -> R7
+	memory[3] = (LDI << 12) | (R6 << 9) | 1;
+	memory[4] = (PSH << 12) | (R6 << 9);
+	memory[5] = (NOP << 12);
+	memory[6] = (POP << 12) | (R7 << 9);
+
 	// 1000 - 1
-	memory[3] = (LDI << 12) | (R1 << 9) | ((1000 & 0xff00) >> 8); // First byte
-	memory[4] = (SLI << 12) | (R1 << 9) | 8;
-	memory[5] = (ADI << 12) | (R1 << 9) | (1000 & 0x00ff); // Second byte
-	memory[6] = (SBI << 12) | (R1 << 9) | 1;
+	memory[7] = (LDI << 12) | (R1 << 9) | ((1000 & 0xff00) >> 8); // First byte
+	memory[8] = (SLI << 12) | (R1 << 9) | 8;
+	memory[9] = (ADI << 12) | (R1 << 9) | (1000 & 0x00ff); // Second byte
+	memory[10] = (SBI << 12) | (R1 << 9) | 1;
 
 	// R1 -> 0x1f -> R2
-	memory[7] = (SVR << 12) | (R1 << 9) | 0x1f;
-	memory[8] = (LDR << 12) | (R2 << 9) | 0x1f;
+	memory[11] = (SVR << 12) | (R1 << 9) | 0x1f;
+	memory[12] = (LDR << 12) | (R2 << 9) | 0x1f;
 
 	// Call R4 = R4 + R5 to solve 2 + 3
-	memory[9] = (LDI << 12) | (R4 << 9) | 2;
-	memory[10] = (LDI << 12) | (R5 << 9) | 3;
-	memory[11] = (CAL << 12) | 0x3a;
+	memory[13] = (LDI << 12) | (R4 << 9) | 2;
+	memory[14] = (LDI << 12) | (R5 << 9) | 3;
+	memory[15] = (CAL << 12) | 0x3a;
 
 	// Infinite R1++
-	memory[12] = (ADI << 12) | (R1 << 9) | 1;
-	memory[13] = (JMP << 12) | 12;
+	memory[16] = (ADI << 12) | (R1 << 9) | 1;
+	memory[17] = (JMP << 12) | 16;
 
  	// Ignored instruction
-	memory[14] = (LDI << 12) | (R2 << 9) | 15;
+	memory[18] = (LDI << 12) | (R2 << 9) | 15;
 
  	// Random instructions for padding
 	memory[0x38] = 0xffff;
@@ -149,6 +157,16 @@ int main(void) {
 				break;
 			case SUB:
 				registers[extract_register(memory[pc])] -= registers[extract_register(extract_value(memory[pc]) << 8)];
+				pc++;
+				break;
+			case PSH:
+				memory[sp] = registers[extract_register(memory[pc])];
+				sp--;
+				pc++;
+				break;
+			case POP:
+				sp++;
+				registers[extract_register(memory[pc])] = memory[sp];
 				pc++;
 				break;
 			default:
