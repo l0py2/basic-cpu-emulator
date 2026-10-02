@@ -1,21 +1,30 @@
 OUT := cpu assembler
+EXAMPLE := sum4
 
 all: cpu assembler
 
 clean:
-	${RM} -f *.bin *.o ${OUT}
+	$(RM) -f *.bin *.o $(OUT)
 
-cpu: cpu.o example-program.o
+run-example: cpu out.bin
+	./cpu out.bin
+
+view-example: out.bin
+	hexdump -x out.bin
+
+cpu: cpu.o
 assembler: assembler.o
 
-cpu.o: cpu.c example-program.h is.h
-example-program.o: example-program.c example-program.h is.h
-assembler.o: assembler.c
+cpu.o: cpu.c is.h
+assembler.o: assembler.c is.h
+
+out.bin: assembler examples/$(EXAMPLE).scasm
+	./assembler examples/$(EXAMPLE).scasm out.bin
 
 %.o: %.c
-	${CC} $< -c -o $@
+	$(CC) $< -c -o $@
 
 %: %.o
-	${CC} $^ -o $@
+	$(CC) $^ -o $@
 
-.PHONY: all clean
+.PHONY: all clean run run-example view-example

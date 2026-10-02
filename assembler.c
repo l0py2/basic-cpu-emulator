@@ -6,13 +6,21 @@
 #include "is.h"
 
 #define LINE_SIZE 256
+#define JUMP_TABLE_SIZE 64
 
 typedef struct {
 	char label[64];
 	word position;
-} jump_pair;
+} jump_ent;
 
-word label_to_position(jump_pair *jump_pairs, word jump_pair_count, char *label);
+void load_registers_table();
+uint8_t load_jump_table(FILE *input_file);
+word label_to_position(char *label);
+void print_jump_table();
+
+static jump_ent jump_table[JUMP_TABLE_SIZE];
+static word first_unknown_jump_ent = 0;
+static word jump_ent_count = 0;
 
 int main(int argc, char **argv) {
 	if(argc < 3) {
@@ -35,58 +43,20 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	char line_buffer[LINE_SIZE];
-	char label[64];
-	char op[8], rx[8], value[64];
+	load_registers_table();
 
-	jump_pair jump_pairs[64];
-
-	long converted_value = 0;
-
-	word current_address = 0;
-	word first_unknown_jump_pair = 0;
-	word jump_pair_count = 0;
-
-	strcpy(jump_pairs[0].label, "R1");
-	jump_pairs[0].position = R1;
-	strcpy(jump_pairs[1].label, "R2");
-	jump_pairs[1].position = R2;
-	strcpy(jump_pairs[2].label, "R3");
-	jump_pairs[2].position = R3;
-	strcpy(jump_pairs[3].label, "R4");
-	jump_pairs[3].position = R4;
-	strcpy(jump_pairs[4].label, "R5");
-	jump_pairs[4].position = R5;
-	strcpy(jump_pairs[5].label, "R6");
-	jump_pairs[5].position = R6;
-	strcpy(jump_pairs[6].label, "R7");
-	jump_pairs[6].position = R7;
-	strcpy(jump_pairs[7].label, "R8");
-	jump_pairs[7].position = R8;
-
-	jump_pair_count = 8;
-	first_unknown_jump_pair = 8;
-
-	while(fgets(line_buffer, LINE_SIZE, input_file) != NULL) {
-		if(sscanf(line_buffer, "%8s %4s %64s\n", op, rx, value) == 3) {
-			for(word i = first_unknown_jump_pair; i < jump_pair_count; i++) {
-				jump_pairs[i].position = current_address;
-			}
-
-			first_unknown_jump_pair = jump_pair_count;
-
-			current_address++;
-		} else if(sscanf(line_buffer, "%64[0-9a-zA-Z]s:\n", &label) == 1) {
-			strcpy(jump_pairs[jump_pair_count].label, label);
-			jump_pairs[jump_pair_count].position = 0;
-
-			jump_pair_count++;
-		}
+	if(!load_jump_table(input_file)) {
+		fclose(input_file);
+		fclose(output_file);
+		printf("Error loading jump table\n");
+		return 1;
 	}
 
-	rewind(input_file);
+	char line_buffer[LINE_SIZE];
+	char op[8], rx[8], value[64];
 
 	word memory_word;
+	long converted_value = 0;
 
 	while(fgets(line_buffer, LINE_SIZE, input_file) != NULL) {
 		if(sscanf(line_buffer, "%8s %4s %64s\n", op, rx, value) == 3) {
@@ -153,18 +123,14 @@ int main(int argc, char **argv) {
 			if(errno == 0 && converted_value != 0) {
 				memory_word = memory_word | converted_value;
 			} else {
-				memory_word = memory_word | label_to_position(jump_pairs, jump_pair_count, value);
+				memory_word = memory_word | label_to_position(value);
 			}
 
 			fwrite(&memory_word, sizeof(word), 1, output_file);
 		}
 	}
 
-	printf("=== Jump map (%d jump pairs) ===\n", jump_pair_count);
-	for(word i = 0; i < jump_pair_count; i++) {
-		printf("%s -> %04X\n", jump_pairs[i].label, jump_pairs[i].position);
-	}
-	printf("====================\n");
+	print_jump_table();
 
 	fclose(input_file);
 	fclose(output_file);
@@ -172,12 +138,76 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-word label_to_position(jump_pair *jump_pairs, word jump_pair_count, char *label) {
-	for(word i = 0; i < jump_pair_count; i++) {
-		if(strcmp(jump_pairs[i].label, label) == 0) {
-			return jump_pairs[i].position;
+void load_registers_table() {
+	strcpy(jump_table[0].label, "R1");
+	jump_table[0].position = R1;
+	strcpy(jump_table[1].label, "R2");
+	jump_table[1].position = R2;
+	strcpy(jump_table[2].label, "R3");
+	jump_table[2].position = R3;
+	strcpy(jump_table[3].label, "R4");
+	jump_table[3].position = R4;
+	strcpy(jump_table[4].label, "R5");
+	jump_table[4].position = R5;
+	strcpy(jump_table[5].label, "R6");
+	jump_table[5].position = R6;
+	strcpy(jump_table[6].label, "R7");
+	jump_table[6].position = R7;
+	strcpy(jump_table[7].label, "R8");
+	jump_table[7].position = R8;
+
+	jump_ent_count = 8;
+	first_unknown_jump_ent = 8;
+}
+
+uint8_t load_jump_table(FILE *input_file) {
+	char line_buffer[LINE_SIZE];
+	char label[64];
+
+	word current_address = 0;
+
+	while(fgets(line_buffer, LINE_SIZE, input_file) != NULL) {
+		if(sscanf(line_buffer, "%*s %*s %*s\n") != EOF) {
+			for(word i = first_unknown_jump_ent; i < jump_ent_count; i++) {
+				jump_table[i].position = current_address;
+			}
+
+			first_unknown_jump_ent = jump_ent_count;
+
+			current_address++;
+		} else if(sscanf(line_buffer, "%64[0-9a-zA-Z]s:\n", &label) == 1) {
+			strcpy(jump_table[jump_ent_count].label, label);
+			jump_table[jump_ent_count].position = 0;
+
+			jump_ent_count++;
+
+			if(jump_ent_count >= JUMP_TABLE_SIZE) {
+				return 0;
+			}
+		}
+	}
+
+	rewind(input_file);
+
+	return 1;
+}
+
+word label_to_position(char *label) {
+	for(word i = 0; i < jump_ent_count; i++) {
+		if(strcmp(jump_table[i].label, label) == 0) {
+			return jump_table[i].position;
 		}
 	}
 
 	return 0;
+}
+
+void print_jump_table() {
+	printf("=== Jump map (%d jump pairs) ===\n", jump_ent_count);
+
+	for(word i = 0; i < jump_ent_count; i++) {
+		printf("%s -> %04X\n", jump_table[i].label, jump_table[i].position);
+	}
+
+	printf("====================\n");
 }

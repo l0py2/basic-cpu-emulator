@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "is.h"
-#include "example-program.h"
 
 void read_file(word *memory, word memory_size, char *path);
 word extract_register(word instruction);
@@ -15,6 +14,11 @@ int main(int argc, char **argv) {
 	word memory[MEMORY_SIZE];
 	word registers[REGISTER_COUNT];
 
+	if(argc < 2) {
+		printf("Usage: %s [binary path]\n", argv[0]);
+		return 1;
+	}
+
 	for(word i = 0; i < MEMORY_SIZE; i++) {
 		memory[i] = NOP;
 	}
@@ -23,11 +27,8 @@ int main(int argc, char **argv) {
 		registers[i] = 0;
 	}
 
-	if(argc < 2) {
-		write_example(memory);
-	} else {
-		read_file(memory, MEMORY_SIZE, argv[1]);
-	}
+
+	read_file(memory, MEMORY_SIZE, argv[1]);
 
 	for(;;) {
 		printf("PC: %02X\n", pc);
