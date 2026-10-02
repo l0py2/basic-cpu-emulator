@@ -11,6 +11,7 @@ void print_memory(word *memory, word memory_size);
 int main(int argc, char **argv) {
 	word pc = 0;
 	word sp = MEMORY_SIZE - 1;
+	word temp = 0;
 	word memory[MEMORY_SIZE];
 	word registers[REGISTER_COUNT];
 
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
 		getchar();
 		printf("=============================================\n\n");
 
-		switch(memory[pc] >> 12) {
+		switch(memory[pc] >> 11) {
 			case NOP:
 				pc++;
 				break;
@@ -102,6 +103,40 @@ int main(int argc, char **argv) {
 			case POP:
 				sp++;
 				registers[extract_register(memory[pc])] = memory[sp];
+				pc++;
+				break;
+			case CMP:
+				temp = registers[extract_register(memory[pc])]
+					- registers[extract_register(extract_value(memory[pc]) << 8)];
+
+				registers[FG] = registers[FG] & ~(ZERO | OVERFLOW);
+
+				if(temp == 0) {
+					registers[FG] = registers[FG] | ZERO;
+				}
+
+				if(temp > registers[extract_register(memory[pc])]) {
+					registers[FG] = registers[FG] | OVERFLOW;
+				}
+
+				pc++;
+				break;
+			case BRE:
+				if(registers[FG] & ZERO) {
+					pc = extract_value(memory[pc]);
+				} else {
+					pc++;
+				}
+				break;
+			case BRN:
+				if(registers[FG] & ZERO) {
+					pc++;
+				} else {
+					pc = extract_value(memory[pc]);
+				}
+				break;
+			case CPY:
+				registers[extract_register(memory[pc])] = registers[extract_register(extract_value(memory[pc]) << 8)];
 				pc++;
 				break;
 			default:

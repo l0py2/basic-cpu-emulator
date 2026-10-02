@@ -19,7 +19,7 @@ CAL 0 sum
 LDI R1 1
 
 loop1:
-loop2:
+		Loop_2:
 	NOP 0 0
 loop3:
 	ADI R1 1

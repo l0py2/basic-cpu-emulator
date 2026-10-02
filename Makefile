@@ -1,5 +1,5 @@
 OUT := cpu assembler
-EXAMPLE := sum4
+EXAMPLE := multiply
 
 all: cpu assembler
 

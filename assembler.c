@@ -53,49 +53,76 @@ int main(int argc, char **argv) {
 	}
 
 	char line_buffer[LINE_SIZE];
+	char cleaned_buffer[LINE_SIZE];
 	char op[8], rx[8], value[64];
 
 	word memory_word;
 	long converted_value = 0;
 
 	while(fgets(line_buffer, LINE_SIZE, input_file) != NULL) {
-		if(sscanf(line_buffer, "%8s %4s %64s\n", op, rx, value) == 3) {
+		sscanf(line_buffer, "%[^\n]s%*[\n]]", cleaned_buffer);
+		sscanf(cleaned_buffer, "%*[ \t]%[^]s]", cleaned_buffer);
+
+		// Empty line
+		if(cleaned_buffer[0] == '\0') {
+			continue;
+		}
+
+		// Comment
+		if(cleaned_buffer[0] == '#') {
+			continue;
+		}
+
+		// Label
+		if(sscanf(cleaned_buffer, "%*[^:]%*[:]") == 0) {
+			continue;
+		}
+
+		if(sscanf(cleaned_buffer, "%8s %4s %64s", op, rx, value) == 3) {
 			memory_word = 0;
 
 			if(strcmp(op, "NOP") == 0) {
-				memory_word = memory_word | (NOP << 12);
+				memory_word = memory_word | (NOP << 11);
 			} else if(strcmp(op, "LDI") == 0) {
-				memory_word = memory_word | (LDI << 12);
+				memory_word = memory_word | (LDI << 11);
 			} else if(strcmp(op, "ADI") == 0) {
-				memory_word = memory_word | (ADI << 12);
+				memory_word = memory_word | (ADI << 11);
 			} else if(strcmp(op, "JMP") == 0) {
-				memory_word = memory_word | (JMP << 12);
+				memory_word = memory_word | (JMP << 11);
 			} else if(strcmp(op, "LDR") == 0) {
-				memory_word = memory_word | (LDR << 12);
+				memory_word = memory_word | (LDR << 11);
 			} else if(strcmp(op, "SVR") == 0) {
-				memory_word = memory_word | (SVR << 12);
+				memory_word = memory_word | (SVR << 11);
 			} else if(strcmp(op, "SBI") == 0) {
-				memory_word = memory_word | (SBI << 12);
+				memory_word = memory_word | (SBI << 11);
 			} else if(strcmp(op, "SLI") == 0) {
-				memory_word = memory_word | (SLI << 12);
+				memory_word = memory_word | (SLI << 11);
 			} else if(strcmp(op, "SRI") == 0) {
-				memory_word = memory_word | (SRI << 12);
+				memory_word = memory_word | (SRI << 11);
 			} else if(strcmp(op, "CAL") == 0) {
-				memory_word = memory_word | (CAL << 12);
+				memory_word = memory_word | (CAL << 11);
 			} else if(strcmp(op, "RET") == 0) {
-				memory_word = memory_word | (RET << 12);
+				memory_word = memory_word | (RET << 11);
 			} else if(strcmp(op, "ADD") == 0) {
-				memory_word = memory_word | (ADD << 12);
+				memory_word = memory_word | (ADD << 11);
 			} else if(strcmp(op, "SUB") == 0) {
-				memory_word = memory_word | (SUB << 12);
+				memory_word = memory_word | (SUB << 11);
 			} else if(strcmp(op, "PSH") == 0) {
-				memory_word = memory_word | (PSH << 12);
+				memory_word = memory_word | (PSH << 11);
 			} else if(strcmp(op, "POP") == 0) {
-				memory_word = memory_word | (POP << 12);
+				memory_word = memory_word | (POP << 11);
+			} else if(strcmp(op, "CMP") == 0) {
+				memory_word = memory_word | (CMP << 11);
+			} else if(strcmp(op, "BRE") == 0) {
+				memory_word = memory_word | (BRE << 11);
+			} else if(strcmp(op, "BRN") == 0) {
+				memory_word = memory_word | (BRN << 11);
+			} else if(strcmp(op, "CPY") == 0) {
+				memory_word = memory_word | (CPY << 11);
 			} else {
 				printf("Unknown operation: %s\n", op);
-				printf("Defaulting to NOP\n\n");
-				memory_word = memory_word | (NOP << 12);
+				printf("Defaulting to NOP\n");
+				memory_word = memory_word | (NOP << 11);
 			}
 
 			if(strcmp(rx, "R1") == 0) {
@@ -118,7 +145,6 @@ int main(int argc, char **argv) {
 
 			errno = 0;
 			converted_value = strtol(value, NULL, 0);
-			printf("\"%s\" -> %ld\n", value, converted_value);
 
 			if(errno == 0 && converted_value != 0) {
 				memory_word = memory_word | converted_value;
@@ -162,12 +188,27 @@ void load_registers_table() {
 
 uint8_t load_jump_table(FILE *input_file) {
 	char line_buffer[LINE_SIZE];
+	char cleaned_buffer[LINE_SIZE];
 	char label[64];
 
 	word current_address = 0;
 
 	while(fgets(line_buffer, LINE_SIZE, input_file) != NULL) {
-		if(sscanf(line_buffer, "%*s %*s %*s\n") != EOF) {
+		sscanf(line_buffer, "%[^\n]s%*[\n]]", cleaned_buffer);
+		sscanf(cleaned_buffer, "%*[ \t]%[^]s]", cleaned_buffer);
+
+		// Empty line
+		if(cleaned_buffer[0] == '\0') {
+			continue;
+		}
+
+		// Comment
+		if(cleaned_buffer[0] == '#') {
+			continue;
+		}
+
+
+		if(sscanf(cleaned_buffer, "%*s %*s %*s") != EOF) {
 			for(word i = first_unknown_jump_ent; i < jump_ent_count; i++) {
 				jump_table[i].position = current_address;
 			}
@@ -175,7 +216,7 @@ uint8_t load_jump_table(FILE *input_file) {
 			first_unknown_jump_ent = jump_ent_count;
 
 			current_address++;
-		} else if(sscanf(line_buffer, "%64[0-9a-zA-Z]s:\n", &label) == 1) {
+		} else if(sscanf(cleaned_buffer, "%64[0-9a-zA-Z_]s:", &label) == 1) {
 			strcpy(jump_table[jump_ent_count].label, label);
 			jump_table[jump_ent_count].position = 0;
 
