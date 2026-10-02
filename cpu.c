@@ -4,11 +4,12 @@
 #include "is.h"
 #include "example-program.h"
 
+void read_file(word *memory, word memory_size, char *path);
 word extract_register(word instruction);
 word extract_value(word instruction);
 void print_memory(word *memory, word memory_size);
 
-int main(void) {
+int main(int argc, char **argv) {
 	word pc = 0;
 	word sp = MEMORY_SIZE - 1;
 	word memory[MEMORY_SIZE];
@@ -22,11 +23,15 @@ int main(void) {
 		registers[i] = 0;
 	}
 
-	write_example(memory);
+	if(argc < 2) {
+		write_example(memory);
+	} else {
+		read_file(memory, MEMORY_SIZE, argv[1]);
+	}
 
 	for(;;) {
-		printf("PC: %04X\n", pc);
-		printf("SP: %04X\n", sp);
+		printf("PC: %02X\n", pc);
+		printf("SP: %02X\n", sp);
 		printf("Current instruction: %04X\n", memory[pc]);
 		printf("=== Memory ===\n");
 		print_memory(memory, MEMORY_SIZE);
@@ -107,8 +112,26 @@ int main(void) {
 	return 0;
 }
 
+void read_file(word *memory, word memory_size, char *path) {
+	FILE *file = fopen(path, "rb");
+
+	if(file == NULL) {
+		return;
+	}
+
+	word memory_word = 0;
+	word current_address = 0;
+
+	while(fread(&memory_word, 1, sizeof(word), file) && current_address < memory_size) {
+		memory[current_address] = memory_word;
+		current_address++;
+	}
+
+	fclose(file);
+}
+
 word extract_register(word instruction) {
-	return (instruction & 0b0000111000000000) >> 9;
+	return (instruction & 0x0700) >> 8;
 }
 
 word extract_value(word instruction) {

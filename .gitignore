@@ -1,2 +1,4 @@
 cpu
+assembler
 *.o
+*.bin

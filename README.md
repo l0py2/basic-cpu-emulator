@@ -4,7 +4,7 @@
 
 ### Format
 
-\[opecode 4 bits\] \[register 2 bits\] \[value 8 bits\]
+\[opecode 4 bits\] \[1 empty bit\] \[register 3 bits\] \[value 8 bits\]
 
 ### Opcodes
 

@@ -1,0 +1,34 @@
+NOP 0 0
+
+LDI R1 1
+SBI R1 3
+
+LDI R2 1
+PSH R2 0
+POP R3 0
+
+LDI R1 0x03
+SLI R1 8
+ADI R1 0xe8
+SBI R1 1
+
+LDI R1 2
+LDI R2 3
+CAL 0 sum
+
+LDI R1 1
+
+loop1:
+loop2:
+	NOP 0 0
+loop3:
+	ADI R1 1
+	JMP 0 loop1
+
+LDI R4 0xff
+
+JMP 0 0
+
+sum:
+	ADD R1 R2
+	RET 0 0
