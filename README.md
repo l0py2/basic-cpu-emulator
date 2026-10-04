@@ -1,6 +1,6 @@
 # Basic CPU ~~Emulator~~
 
-## Instrcutions
+## Instructions
 
 ### Format
 
