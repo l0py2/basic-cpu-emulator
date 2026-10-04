@@ -104,6 +104,18 @@ int main(int argc, char **argv) {
 				registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] >> extract_value(memory[pc]);
 				pc++;
 				break;
+			case CLR:
+				registers[extract_register(memory[pc])] = 0x0000;
+				pc++;
+				break;
+			case SET:
+				registers[extract_register(memory[pc])] = 0xffff;
+				pc++;
+				break;
+			case NOT:
+				registers[extract_register(memory[pc])] = ~registers[extract_register(memory[pc])];
+				pc++;
+				break;
 			case ADD:
 				registers[extract_register(memory[pc])] += registers[extract_register(extract_value(memory[pc]) << 8)];
 				pc++;
@@ -126,6 +138,14 @@ int main(int argc, char **argv) {
 					registers[FLAGS] = registers[FLAGS] | OVERFLOW;
 				}
 
+				pc++;
+				break;
+			case AND:
+				registers[extract_register(memory[pc])] &= registers[extract_register(extract_value(memory[pc]) << 8)];
+				pc++;
+				break;
+			case OR:
+				registers[extract_register(memory[pc])] |= registers[extract_register(extract_value(memory[pc]) << 8)];
 				pc++;
 				break;
 			case JUMP:

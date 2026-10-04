@@ -222,12 +222,22 @@ uint8_t write_instructions(FILE *input_file, FILE *output_file) {
 				memory_word = memory_word | (SLI << 11);
 			} else if(strcmp(op, "SRI") == 0) {
 				memory_word = memory_word | (SRI << 11);
+			} else if(strcmp(op, "CLR") == 0) {
+				memory_word = memory_word | (CLR << 11);
+			} else if(strcmp(op, "SET") == 0) {
+				memory_word = memory_word | (SET << 11);
+			} else if(strcmp(op, "NOT") == 0) {
+				memory_word = memory_word | (NOT << 11);
 			} else if(strcmp(op, "ADD") == 0) {
 				memory_word = memory_word | (ADD << 11);
 			} else if(strcmp(op, "SUB") == 0) {
 				memory_word = memory_word | (SUB << 11);
 			} else if(strcmp(op, "COMP") == 0) {
 				memory_word = memory_word | (COMP << 11);
+			} else if(strcmp(op, "AND") == 0) {
+				memory_word = memory_word | (AND << 11);
+			} else if(strcmp(op, "OR") == 0) {
+				memory_word = memory_word | (OR << 11);
 			} else if(strcmp(op, "JUMP") == 0) {
 				memory_word = memory_word | (JUMP << 11);
 			} else if(strcmp(op, "BRNEQ") == 0) {
