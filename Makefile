@@ -1,5 +1,5 @@
 OUT := cpu assembler
-EXAMPLE := multiply
+EXAMPLE := basic
 
 all: cpu assembler
 

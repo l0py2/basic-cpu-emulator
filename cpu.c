@@ -47,27 +47,51 @@ int main(int argc, char **argv) {
 			case NOP:
 				pc++;
 				break;
-			case LDI:
-				registers[extract_register(memory[pc])] = extract_value(memory[pc]);
+			case LDHI:
+				registers[extract_register(memory[pc])] =
+					(extract_value(memory[pc]) << 8)
+					| (registers[extract_register(memory[pc])] & 0x00ff);
 				pc++;
 				break;
-			case ADI:
+			case LDLI:
+				registers[extract_register(memory[pc])] =
+					extract_value(memory[pc])
+					| (registers[extract_register(memory[pc])] & 0xff00);
+				pc++;
+				break;
+			case LDM:
+				registers[extract_register(memory[pc])] = memory[registers[extract_register(extract_value(memory[pc]) << 8)]];
+				pc++;
+				break;
+			case SVM:
+				memory[registers[extract_register(extract_value(memory[pc]) << 8)]] = registers[extract_register(memory[pc])];
+				pc++;
+				break;
+			case COPY:
+				registers[extract_register(memory[pc])] = registers[extract_register(extract_value(memory[pc]) << 8)];
+				pc++;
+				break;
+			case ADDI:
 				registers[extract_register(memory[pc])] += extract_value(memory[pc]);
 				pc++;
 				break;
-			case JMP:
-				pc = extract_value(memory[pc]);
-				break;
-			case LDR:
-				registers[extract_register(memory[pc])] = memory[extract_value(memory[pc])];
-				pc++;
-				break;
-			case SVR:
-				memory[extract_value(memory[pc])] = registers[extract_register(memory[pc])];
-				pc++;
-				break;
-			case SBI:
+			case SUBI:
 				registers[extract_register(memory[pc])] -= extract_value(memory[pc]);
+				pc++;
+				break;
+			case COMPI:
+				temp = registers[extract_register(memory[pc])] - extract_value(memory[pc]);
+
+				registers[FLAGS] = registers[FLAGS] & ~(ZERO | OVERFLOW);
+
+				if(temp == 0) {
+					registers[FLAGS] = registers[FLAGS] | ZERO;
+				}
+
+				if(temp > registers[extract_register(memory[pc])]) {
+					registers[FLAGS] = registers[FLAGS] | OVERFLOW;
+				}
+
 				pc++;
 				break;
 			case SLI:
@@ -78,15 +102,6 @@ int main(int argc, char **argv) {
 				registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] >> extract_value(memory[pc]);
 				pc++;
 				break;
-			case CAL:
-				memory[sp] = pc + 1;
-				sp--;
-				pc = extract_value(memory[pc]);
-				break;
-			case RET:
-				sp++;
-				pc = memory[sp];
-				break;
 			case ADD:
 				registers[extract_register(memory[pc])] += registers[extract_register(extract_value(memory[pc]) << 8)];
 				pc++;
@@ -95,7 +110,45 @@ int main(int argc, char **argv) {
 				registers[extract_register(memory[pc])] -= registers[extract_register(extract_value(memory[pc]) << 8)];
 				pc++;
 				break;
-			case PSH:
+			case COMP:
+				temp = registers[extract_register(memory[pc])]
+					- registers[extract_register(extract_value(memory[pc]) << 8)];
+
+				registers[FLAGS] = registers[FLAGS] & ~(ZERO | OVERFLOW);
+
+				if(temp == 0) {
+					registers[FLAGS] = registers[FLAGS] | ZERO;
+				}
+
+				if(temp > registers[extract_register(memory[pc])]) {
+					registers[FLAGS] = registers[FLAGS] | OVERFLOW;
+				}
+
+				pc++;
+				break;
+			case JUMP:
+				pc = extract_value(memory[pc]);
+				break;
+			case BRNEQ:
+				if(registers[FLAGS] & ZERO) {
+					pc++;
+				} else {
+					pc = extract_value(memory[pc]);
+				}
+				break;
+			case BREQ:
+				if(registers[FLAGS] & ZERO) {
+					pc = extract_value(memory[pc]);
+				} else {
+					pc++;
+				}
+				break;
+			case CALL:
+				memory[sp] = pc + 1;
+				sp--;
+				pc = extract_value(memory[pc]);
+				break;
+			case PUSH:
 				memory[sp] = registers[extract_register(memory[pc])];
 				sp--;
 				pc++;
@@ -105,39 +158,9 @@ int main(int argc, char **argv) {
 				registers[extract_register(memory[pc])] = memory[sp];
 				pc++;
 				break;
-			case CMP:
-				temp = registers[extract_register(memory[pc])]
-					- registers[extract_register(extract_value(memory[pc]) << 8)];
-
-				registers[FG] = registers[FG] & ~(ZERO | OVERFLOW);
-
-				if(temp == 0) {
-					registers[FG] = registers[FG] | ZERO;
-				}
-
-				if(temp > registers[extract_register(memory[pc])]) {
-					registers[FG] = registers[FG] | OVERFLOW;
-				}
-
-				pc++;
-				break;
-			case BRE:
-				if(registers[FG] & ZERO) {
-					pc = extract_value(memory[pc]);
-				} else {
-					pc++;
-				}
-				break;
-			case BRN:
-				if(registers[FG] & ZERO) {
-					pc++;
-				} else {
-					pc = extract_value(memory[pc]);
-				}
-				break;
-			case CPY:
-				registers[extract_register(memory[pc])] = registers[extract_register(extract_value(memory[pc]) << 8)];
-				pc++;
+			case RET:
+				sp++;
+				pc = memory[sp];
 				break;
 			default:
 				pc++;

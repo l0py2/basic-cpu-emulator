@@ -10,24 +10,26 @@ typedef uint16_t word;
 
 typedef enum {
 	NOP = 0b00000,
-	LDI = 0b00001,
-	ADI = 0b00010,
-	JMP = 0b00011,
-	LDR = 0b00100,
-	SVR = 0b00101,
-	SBI = 0b00110,
-	SLI = 0b00111,
-	SRI = 0b01000,
-	CAL = 0b01001,
-	RET = 0b01010,
-	ADD = 0b01011,
-	SUB = 0b01100,
-	PSH = 0b01101,
-	POP = 0b01110,
-	CMP = 0b01111,
-	BRE = 0b10000,
-	BRN = 0b10001,
-	CPY = 0b10010
+	LDHI,
+	LDLI,
+	LDM,
+	SVM,
+	COPY,
+	ADDI,
+	SUBI,
+	COMPI,
+	SLI,
+	SRI,
+	ADD,
+	SUB,
+	COMP,
+	JUMP,
+	BRNEQ,
+	BREQ,
+	CALL,
+	PUSH,
+	POP,
+	RET
 } instruction;
 
 typedef enum {
@@ -39,7 +41,7 @@ typedef enum {
 	R6 = 0b101,
 	R7 = 0b110,
 	R8 = 0b111,
-	FG = 0b111
+	FLAGS = R8
 } rx;
 
 typedef enum {

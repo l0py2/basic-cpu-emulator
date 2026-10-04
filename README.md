@@ -4,22 +4,49 @@
 
 ### Format
 
-\[opecode 4 bits\] \[1 empty bit\] \[register 3 bits\] \[value 8 bits\]
+**\[opcode 5 bits\] \[register 3 bits\] \[value 8 bits\]**
 
 ### Opcodes
 
-- 0000 NOP (no operation)
-- 0001 LDI (load imediate to register)
-- 0010 ADI (add imediate to register)
-- 0011 JMP (jump to address)
-- 0100 LDR (load value from memory to register)
-- 0101 SVR (save value from register to memory)
-- 0110 SBI (subtract imeditate from register)
-- 0111 SLI (shift register to the left by imediate)
-- 1000 SRI (shift register to the right by imediate)
-- 1001 CAL (save next address to stack and jump to address)
-- 1010 RET (jump to address saved in stack)
-- 1011 ADD (add register to another register)
-- 1100 SUB (subtract register from register)
-- 1101 PSH (save value from register to stack)
-- 1110 POP (load value from stack to register)
+- NOP
+- LDHI
+- LDLI
+- LDHM
+- LDLM
+- SVHM
+- SVLM
+- ADDI
+- SUBI
+- COMPI
+- SLI
+- SRI
+- ADD
+- SUB
+- COMP
+- JUMP
+- BRNEQ
+- BREQ
+- CALL
+- PUSH
+- POP
+- RET
+
+### Registers
+
+- R1
+- R2
+- R3
+- R4
+- R5
+- R6
+- R7
+- R8/FLAGS
+
+### Flags
+
+- ZERO
+- OVERFLOW
+
+## Assembler directives
+
+- \[label name\]:
