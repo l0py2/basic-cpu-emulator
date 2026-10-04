@@ -3,7 +3,9 @@
 
 #include "is.h"
 
-void read_file(word *memory, word memory_size, char *path);
+#define PRINT_MEMORY_SIZE 256
+
+void read_file(word *memory, unsigned int memory_size, char *path);
 word extract_register(word instruction);
 word extract_value(word instruction);
 void print_memory(word *memory, word memory_size);
@@ -20,7 +22,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	for(word i = 0; i < MEMORY_SIZE; i++) {
+	for(unsigned int i = 0; i < MEMORY_SIZE; i++) {
 		memory[i] = NOP;
 	}
 
@@ -32,11 +34,11 @@ int main(int argc, char **argv) {
 	read_file(memory, MEMORY_SIZE, argv[1]);
 
 	for(;;) {
-		printf("PC: %02X\n", pc);
-		printf("SP: %02X\n", sp);
+		printf("PC: %04X\n", pc);
+		printf("SP: %04X\n", sp);
 		printf("Current instruction: %04X\n", memory[pc]);
 		printf("=== Memory ===\n");
-		print_memory(memory, MEMORY_SIZE);
+		print_memory(memory, PRINT_MEMORY_SIZE);
 		printf("\n=== Registers ===\n");
 		print_memory(registers, REGISTER_COUNT);
 		printf("\n\nPress return to cycle\n");
@@ -171,7 +173,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void read_file(word *memory, word memory_size, char *path) {
+void read_file(word *memory, unsigned int memory_size, char *path) {
 	FILE *file = fopen(path, "rb");
 
 	if(file == NULL) {

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MEMORY_SIZE 256
+#define MEMORY_SIZE 65536 // 2^16 addresses
 #define REGISTER_COUNT 8
 
 typedef uint16_t word;
