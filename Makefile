@@ -1,7 +1,7 @@
 OUT := cpu assembler
 EXAMPLE := basic
 
-all: cpu assembler
+all: $(OUT)
 
 clean:
 	$(RM) -f *.bin *.o $(OUT)
@@ -12,10 +12,13 @@ run-example: cpu out.bin
 view-example: out.bin
 	hexdump -x out.bin
 
-cpu: cpu.o
+cpu: cpu.o tui.o
+	$(CC) $^ `pkg-config --libs ncurses` -o $@
+
 assembler: assembler.o
 
-cpu.o: cpu.c is.h
+cpu.o: cpu.c is.h tui.h
+tui.o: tui.c tui.h
 assembler.o: assembler.c is.h
 
 out.bin: assembler examples/$(EXAMPLE).scasm
