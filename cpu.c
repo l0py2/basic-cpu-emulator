@@ -1,87 +1,76 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "is.h"
-#include "tui.h"
 
-#define PRINT_MEMORY_SIZE 256
-
-void read_file(word *memory, unsigned int memory_size, char *path);
+void read_file(char *path);
 word extract_register(word instruction);
 word extract_value(word instruction);
 void execute();
+void usr1_handler(int signum);
 
-static word pc = 0;
-static word sp = MEMORY_SIZE - 1;
-static word memory[MEMORY_SIZE];
-static word registers[REGISTER_COUNT];
+static cpu_t *cpu = NULL;
 
 int main(int argc, char **argv) {
+	struct sigaction sig_action;
+	sig_action.sa_handler = usr1_handler;
+	sig_action.sa_flags = 0;
+	sigemptyset(&(sig_action.sa_mask));
+	sigaction(SIGUSR1, &sig_action, NULL);
+
+	shm_unlink("/basic-cpu-emu"); // Delete existing memory object
+	int cpu_fd = shm_open("/basic-cpu-emu", O_RDWR | O_CREAT, 0600);
+
+	if(cpu_fd < 0) {
+		printf("Failed to open shared memory object\n");
+		return 1;
+	}
+
+	if(ftruncate(cpu_fd, sizeof(cpu_t)) != 0) {
+		printf("Failed to truncate shared memory\n");
+		return 1;
+	}
+
+	cpu = mmap(NULL, sizeof(cpu_t), PROT_READ | PROT_WRITE, MAP_SHARED, cpu_fd, 0);
+
+	if(cpu == MAP_FAILED) {
+		printf("Failed to map shared memory\n");
+		return 1;
+	}
+
+	cpu->cpu_pid = getpid();
+
 	if(argc < 2) {
 		printf("Usage: %s [binary path]\n", argv[0]);
 		return 1;
 	}
 
-	if(!initialize_tui()) {
-		printf("Failed to initialize TUI\n");
-		return 1;
-	}
-
 	for(unsigned int i = 0; i < MEMORY_SIZE; i++) {
-		memory[i] = NOP;
+		cpu->memory[i] = NOP;
 	}
 
 	for(word i = 0; i < REGISTER_COUNT; i++) {
-		registers[i] = 0;
+		cpu->registers[i] = 0;
 	}
 
-	read_file(memory, MEMORY_SIZE, argv[1]);
+	read_file(argv[1]);
 
 	int key;
 	unsigned int line = 0;
 
 	for(;;) {
-		print_help_view();
-		print_registers_view(pc, sp, registers, REGISTER_COUNT);
-		print_memory_view(memory, MEMORY_SIZE, line);
-
-		refresh_tui();
-
-		key = getch();
-
-		if(key == 'q') {
-			break;
-		}
-
-		switch(key) {
-			case 'c':
-				execute();
-				break;
-			case 'j':
-				line++;
-				break;
-			case 'k':
-				line--;
-				break;
-			case 's':
-				line = 0;
-				break;
-			case 'e':
-				line = (MEMORY_SIZE / 16) - 1;
-				break;
-		}
-
-		if(line > ((MEMORY_SIZE / 16) - 1)) {
-			line = 0;
-		}
+		// execute();
 	}
-
-	end_tui();
 
 	return 0;
 }
 
-void read_file(word *memory, unsigned int memory_size, char *path) {
+void read_file(char *path) {
 	FILE *file = fopen(path, "rb");
 
 	if(file == NULL) {
@@ -91,8 +80,8 @@ void read_file(word *memory, unsigned int memory_size, char *path) {
 	word memory_word = 0;
 	word current_address = 0;
 
-	while(fread(&memory_word, 1, sizeof(word), file) && current_address < memory_size) {
-		memory[current_address] = memory_word;
+	while(fread(&memory_word, 1, sizeof(word), file) && current_address < MEMORY_SIZE) {
+		cpu->memory[current_address] = memory_word;
 		current_address++;
 	}
 
@@ -110,147 +99,151 @@ word extract_value(word instruction) {
 void execute() {
 	word temp = 0;
 
-	switch(memory[pc] >> 11) {
+	switch(cpu->memory[cpu->pc] >> 11) {
 		case NOP:
-			pc++;
+			cpu->pc++;
 			break;
 		case LDHI:
-			registers[extract_register(memory[pc])] =
-				(extract_value(memory[pc]) << 8)
-				| (registers[extract_register(memory[pc])] & 0x00ff);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] =
+				(extract_value(cpu->memory[cpu->pc]) << 8)
+				| (cpu->registers[extract_register(cpu->memory[cpu->pc])] & 0x00ff);
+			cpu->pc++;
 			break;
 		case LDLI:
-			registers[extract_register(memory[pc])] =
-				extract_value(memory[pc])
-				| (registers[extract_register(memory[pc])] & 0xff00);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] =
+				extract_value(cpu->memory[cpu->pc])
+				| (cpu->registers[extract_register(cpu->memory[cpu->pc])] & 0xff00);
+			cpu->pc++;
 			break;
 		case LDM:
-			registers[extract_register(memory[pc])] = memory[registers[extract_register(extract_value(memory[pc]) << 8)]];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = cpu->memory[cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)]];
+			cpu->pc++;
 			break;
 		case SVM:
-			memory[registers[extract_register(extract_value(memory[pc]) << 8)]] = registers[extract_register(memory[pc])];
-			pc++;
+			cpu->memory[cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)]] = cpu->registers[extract_register(cpu->memory[cpu->pc])];
+			cpu->pc++;
 			break;
 		case COPY:
-			registers[extract_register(memory[pc])] = registers[extract_register(extract_value(memory[pc]) << 8)];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
+			cpu->pc++;
 			break;
 		case ADDI:
-			registers[extract_register(memory[pc])] += extract_value(memory[pc]);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] += extract_value(cpu->memory[cpu->pc]);
+			cpu->pc++;
 			break;
 		case SUBI:
-			registers[extract_register(memory[pc])] -= extract_value(memory[pc]);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] -= extract_value(cpu->memory[cpu->pc]);
+			cpu->pc++;
 			break;
 		case COMPI:
-			temp = registers[extract_register(memory[pc])] - extract_value(memory[pc]);
+			temp = cpu->registers[extract_register(cpu->memory[cpu->pc])] - extract_value(cpu->memory[cpu->pc]);
 
-			registers[FLAGS] = registers[FLAGS] & ~(ZERO | OVERFLOW);
+			cpu->registers[FLAGS] = cpu->registers[FLAGS] & ~(ZERO | OVERFLOW);
 
 			if(temp == 0) {
-				registers[FLAGS] = registers[FLAGS] | ZERO;
+				cpu->registers[FLAGS] = cpu->registers[FLAGS] | ZERO;
 			}
 
-			if(temp > registers[extract_register(memory[pc])]) {
-				registers[FLAGS] = registers[FLAGS] | OVERFLOW;
+			if(temp > cpu->registers[extract_register(cpu->memory[cpu->pc])]) {
+				cpu->registers[FLAGS] = cpu->registers[FLAGS] | OVERFLOW;
 			}
 
-			pc++;
+			cpu->pc++;
 			break;
 		case SLI:
-			registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] << extract_value(memory[pc]);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = cpu->registers[extract_register(cpu->memory[cpu->pc])] << extract_value(cpu->memory[cpu->pc]);
+			cpu->pc++;
 			break;
 		case SRI:
-			registers[extract_register(memory[pc])] = registers[extract_register(memory[pc])] >> extract_value(memory[pc]);
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = cpu->registers[extract_register(cpu->memory[cpu->pc])] >> extract_value(cpu->memory[cpu->pc]);
+			cpu->pc++;
 			break;
 		case CLR:
-			registers[extract_register(memory[pc])] = 0x0000;
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = 0x0000;
+			cpu->pc++;
 			break;
 		case SET:
-			registers[extract_register(memory[pc])] = 0xffff;
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = 0xffff;
+			cpu->pc++;
 			break;
 		case NOT:
-			registers[extract_register(memory[pc])] = ~registers[extract_register(memory[pc])];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = ~cpu->registers[extract_register(cpu->memory[cpu->pc])];
+			cpu->pc++;
 			break;
 		case ADD:
-			registers[extract_register(memory[pc])] += registers[extract_register(extract_value(memory[pc]) << 8)];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] += cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
+			cpu->pc++;
 			break;
 		case SUB:
-			registers[extract_register(memory[pc])] -= registers[extract_register(extract_value(memory[pc]) << 8)];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] -= cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
+			cpu->pc++;
 			break;
 		case COMP:
-			temp = registers[extract_register(memory[pc])]
-				- registers[extract_register(extract_value(memory[pc]) << 8)];
+			temp = cpu->registers[extract_register(cpu->memory[cpu->pc])]
+				- cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
 
-			registers[FLAGS] = registers[FLAGS] & ~(ZERO | OVERFLOW);
+			cpu->registers[FLAGS] = cpu->registers[FLAGS] & ~(ZERO | OVERFLOW);
 
 			if(temp == 0) {
-				registers[FLAGS] = registers[FLAGS] | ZERO;
+				cpu->registers[FLAGS] = cpu->registers[FLAGS] | ZERO;
 			}
 
-			if(temp > registers[extract_register(memory[pc])]) {
-				registers[FLAGS] = registers[FLAGS] | OVERFLOW;
+			if(temp > cpu->registers[extract_register(cpu->memory[cpu->pc])]) {
+				cpu->registers[FLAGS] = cpu->registers[FLAGS] | OVERFLOW;
 			}
 
-			pc++;
+			cpu->pc++;
 			break;
 		case AND:
-			registers[extract_register(memory[pc])] &= registers[extract_register(extract_value(memory[pc]) << 8)];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] &= cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
+			cpu->pc++;
 			break;
 		case OR:
-			registers[extract_register(memory[pc])] |= registers[extract_register(extract_value(memory[pc]) << 8)];
-			pc++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] |= cpu->registers[extract_register(extract_value(cpu->memory[cpu->pc]) << 8)];
+			cpu->pc++;
 			break;
 		case JUMP:
-			pc = extract_value(memory[pc]);
+			cpu->pc = extract_value(cpu->memory[cpu->pc]);
 			break;
 		case BRNEQ:
-			if(registers[FLAGS] & ZERO) {
-				pc++;
+			if(cpu->registers[FLAGS] & ZERO) {
+				cpu->pc++;
 			} else {
-				pc = extract_value(memory[pc]);
+				cpu->pc = extract_value(cpu->memory[cpu->pc]);
 			}
 			break;
 		case BREQ:
-			if(registers[FLAGS] & ZERO) {
-				pc = extract_value(memory[pc]);
+			if(cpu->registers[FLAGS] & ZERO) {
+				cpu->pc = extract_value(cpu->memory[cpu->pc]);
 			} else {
-				pc++;
+				cpu->pc++;
 			}
 			break;
 		case CALL:
-			memory[sp] = pc + 1;
-			sp--;
-			pc = extract_value(memory[pc]);
+			cpu->memory[cpu->sp] = cpu->pc + 1;
+			cpu->sp--;
+			cpu->pc = extract_value(cpu->memory[cpu->pc]);
 			break;
 		case PUSH:
-			memory[sp] = registers[extract_register(memory[pc])];
-			sp--;
-			pc++;
+			cpu->memory[cpu->sp] = cpu->registers[extract_register(cpu->memory[cpu->pc])];
+			cpu->sp--;
+			cpu->pc++;
 			break;
 		case POP:
-			sp++;
-			registers[extract_register(memory[pc])] = memory[sp];
-			pc++;
+			cpu->sp++;
+			cpu->registers[extract_register(cpu->memory[cpu->pc])] = cpu->memory[cpu->sp];
+			cpu->pc++;
 			break;
 		case RET:
-			sp++;
-			pc = memory[sp];
+			cpu->sp++;
+			cpu->pc = cpu->memory[cpu->sp];
 			break;
 		default:
-			pc++;
+			cpu->pc++;
 			break;
 	}
+}
+
+void usr1_handler(int signum) {
+	execute();
 }

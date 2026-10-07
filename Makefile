@@ -1,5 +1,7 @@
-OUT := cpu assembler
 EXAMPLE := basic
+OUT := cpu assembler debug
+
+CFLAGS := -Wall
 
 all: $(OUT)
 
@@ -12,14 +14,14 @@ run-example: cpu out.bin
 view-example: out.bin
 	hexdump -x out.bin
 
-cpu: cpu.o tui.o
+cpu: cpu.o
+assembler: assembler.o
+debug: debug.o
 	$(CC) $^ `pkg-config --libs ncurses` -o $@
 
-assembler: assembler.o
-
-cpu.o: cpu.c is.h tui.h
-tui.o: tui.c tui.h
+cpu.o: cpu.c is.h
 assembler.o: assembler.c is.h
+debug.o: debug.c is.h
 
 out.bin: assembler examples/$(EXAMPLE).scasm
 	./assembler examples/$(EXAMPLE).scasm out.bin

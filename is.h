@@ -2,6 +2,7 @@
 #define IS_H
 
 #include <stdint.h>
+#include <unistd.h>
 
 #define MEMORY_SIZE 65536 // 2^16 addresses
 #define REGISTER_COUNT 8
@@ -53,5 +54,13 @@ typedef enum {
 	ZERO     = 0b1000000000000000,
 	OVERFLOW = 0b0100000000000000
 } flags;
+
+typedef struct {
+	word pc;
+	word sp;
+	word memory[MEMORY_SIZE];
+	word registers[REGISTER_COUNT];
+	pid_t cpu_pid;
+} cpu_t;
 
 #endif

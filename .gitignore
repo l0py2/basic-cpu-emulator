@@ -1,4 +1,5 @@
 cpu
 assembler
+debug
 *.o
 *.bin
