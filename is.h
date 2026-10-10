@@ -11,24 +11,32 @@ typedef uint16_t word;
 
 typedef enum {
 	NOP = 0b00000,
+	// Memory
 	LDHI,
 	LDLI,
 	LDM,
 	SVM,
 	COPY,
+	// Arithmetic
 	ADDI,
 	SUBI,
+	ADD,
+	SUB,
+	MULT,
+	DIV,
+	MOD,
+	// Comparison
 	COMPI,
+	COMP,
+	// Bit-wise
 	SLI,
 	SRI,
 	CLR,
 	SET,
 	NOT,
-	ADD,
-	SUB,
-	COMP,
 	AND,
 	OR,
+	// Branching
 	JUMP,
 	BRNEQ,
 	BREQ,

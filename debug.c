@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
 	}
 
 	cpu = mmap(NULL, sizeof(cpu_t), PROT_READ, MAP_SHARED, cpu_fd, 0);
+	close(cpu_fd);
 
 	if(cpu == MAP_FAILED) {
 		printf("Failed to map shared memory\n");
