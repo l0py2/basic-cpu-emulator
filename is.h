@@ -41,6 +41,7 @@ typedef enum {
 	BRNEQ,
 	BREQ,
 	CALL,
+	// Stack
 	PUSH,
 	POP,
 	RET

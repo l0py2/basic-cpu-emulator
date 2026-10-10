@@ -9,22 +9,29 @@
 ### Opcodes
 
 - NOP (no operation)
+
 - LDHI (load imediate to register high byte)
 - LDLI (load imediate to register low byte)
 - LDM (load memory to register)
 - SVM (save register to memory)
+- COPY (copy from a register to another register)
 
 - ADDI (add imediate to register)
 - SUBI (subtract imediate to register)
+- ADD (add register to another register)
+- SUB (subtract register to another register)
+- MULT (multiply a register with another register)
+- DIV (divide a register with another register)
+- MOD (modulus of register with another register)
+
 - COMPI (compare imediate to register \[register - imediate value\])
+- COMP (compare register to another register)
+
 - SLI (shift register to the left by imediate)
 - SRI (shift register to the right by imediate)
 - SET (sets all bits of register)
 - CLR (clear all bits of register)
 - NOT (bitwise NOT on a register)
-- ADD (add register to another register)
-- SUB (subtract register to another register)
-- COMP (compare register to another register)
 - AND (bitwise AND between a register and another register)
 - OR (bitwise OR between a register and another register)
 
