@@ -1,5 +1,6 @@
 cpu
 assembler
 debug
+vga-text
 *.o
 *.bin

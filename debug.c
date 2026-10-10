@@ -30,7 +30,7 @@ static WINDOW *help_view;
 static WINDOW *registers_view;
 static WINDOW *memory_view;
 
-int main(int argc, char **argv) {
+int main(void) {
 	int cpu_fd = shm_open("/basic-cpu-emu", O_RDONLY, 0);
 
 	if(cpu_fd < 0) {

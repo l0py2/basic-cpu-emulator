@@ -1,48 +1,14 @@
+first_char:
 NOP 0 0
 
-# Test subtraction underflow
-LDHI R1 0
-LDLI R1 1
-SUBI R1 3
-NOP 0 0
-
-# LDHI R1 0
-LDLI R1 0
-NOP 0 0
-
-# Test addition overflow
-LDHI R1 0xff
-LDLI R1 0xfe
-ADDI R1 3
-NOP 0 0
-
-# Test call
 LDHI R2 0
-LDLI R2 3
-LDHI R3 0
-LDLI R3 2
-CALL 0 multiply
-NOP 0 0
+LDLI R2 first_char
 
-# Test labels and indentation
-label1:
-	labeL_2:
-label3:
-	JUMP 0 labeL_2
+# Load non-blinking white fg black bg 'A'
+LDHI R1 0b00001111
+LDLI R1 65
 
-# R4 = R2 * R3
-multiply:
-	LDHI R4 0
-	LDLI R4 0
+SVM R1 R2
 
-	PUSH R3 0
-
-	multiply_dec_loop:
-		ADD R4 R2
-		SUBI R3 1
-		COMPI R3 0
-		BRNEQ 0 multiply_dec_loop
-
-	POP R3 0
-
-	RET 0 0
+loop:
+	JUMP 0 loop

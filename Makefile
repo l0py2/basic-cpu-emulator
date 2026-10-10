@@ -1,5 +1,5 @@
 EXAMPLE := basic
-OUT := cpu assembler debug
+OUT := cpu assembler debug vga-text
 
 CFLAGS := -Wall
 
@@ -18,10 +18,12 @@ cpu: cpu.o
 assembler: assembler.o
 debug: debug.o
 	$(CC) $^ `pkg-config --libs ncurses` -o $@
+vga-text: vga-text.o
 
 cpu.o: cpu.c is.h
 assembler.o: assembler.c is.h
 debug.o: debug.c is.h
+vga-text.o: vga-text.c is.h
 
 out.bin: assembler examples/$(EXAMPLE).scasm
 	./assembler examples/$(EXAMPLE).scasm out.bin
