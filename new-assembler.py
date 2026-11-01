@@ -6,6 +6,7 @@ from typing import NamedTuple
 import re
 from enum import Enum
 from itertools import tee
+from ctypes import c_uint16
 
 class Instruction(Enum):
     NOP   = 0 << 11
@@ -187,10 +188,17 @@ def generate_program(tokens, symbol_table):
 
     return program
 
+def write_program_file(path, program):
+    with open(path, 'wb') as file:
+        for value in program:
+            file.write(c_uint16(value))
+
 symbol_tokens, program_tokens = tee(tokenize_file('./examples/new-basic.asm'), 2)
 
 symbol_table = generate_symbol_table(symbol_tokens)
 program = generate_program(program_tokens, symbol_table)
+
+write_program_file('./out.bin', program)
 
 print('=== Symbol Table ===')
 for symbol, value in symbol_table.items():
