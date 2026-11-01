@@ -34,16 +34,16 @@ class Instruction(Enum):
     SET   = 18 << 11
     NOT   = 19 << 11
     AND   = 20 << 11
-    OR    = 10 << 11
+    OR    = 21 << 11
     # Branching
-    JUMP  = 21 << 11
-    BRNEQ = 22 << 11
-    BREQ  = 23 << 11
-    CALL  = 24 << 11
+    JUMP  = 22 << 11
+    BRNEQ = 23 << 11
+    BREQ  = 24 << 11
+    CALL  = 25 << 11
     # Stack
-    PUSH  = 25 << 11
-    POP   = 26 << 11
-    RET   = 27 << 11
+    PUSH  = 26 << 11
+    POP   = 27 << 11
+    RET   = 28 << 11
 
 class Register(Enum):
     R1 = 0
@@ -154,9 +154,15 @@ def generate_symbol_table(tokens):
                 next(tokens)
                 current_address += 1
                 current_token = next(tokens)
-            case _:
-                # raise RuntimeError(f'"{current_token.type}" invalid token')
+            case 'JUMP':
+                next(tokens)
+                current_address += 1
                 current_token = next(tokens)
+            case _:
+                raise RuntimeError(
+                    f'"{current_token.value}({current_token.type})"'
+                    + f' invalid token on line {current_token.line}'
+                )
 
     return symbol_table
 
@@ -208,9 +214,18 @@ def generate_program(tokens, symbol_table):
                 )
                 current_address += 1
                 current_token = next(tokens)
-            case _:
-                # raise RuntimeError(f'"{current_token.type}" invalid token')
+            case 'JUMP':
+                program.append(
+                    Instruction.JUMP.value
+                    | symbol_table[next(tokens).value]
+                )
+                current_address += 1
                 current_token = next(tokens)
+            case _:
+                raise RuntimeError(
+                    f'"{current_token.value}({current_token.type})"'
+                    + f' invalid token on line {current_token.line}'
+                )
 
     return program
 
