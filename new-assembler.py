@@ -62,7 +62,10 @@ class Token(NamedTuple):
     column: int
 
 def tokenize(code):
-    keywords = []
+    # Initialize with pseudo instructions
+    keywords = [
+        'LDI'
+    ]
 
     for instruction in Instruction:
         keywords.append(instruction.name)
@@ -133,6 +136,11 @@ def generate_symbol_table(tokens):
             case 'LABEL':
                 symbol_table[current_token.value] = current_address
                 current_token = next(tokens)
+            case 'LDI':
+                next(tokens)
+                next(tokens)
+                current_address += 2
+                current_token = next(tokens)
             case 'NOP':
                 current_address += 1
                 current_token = next(tokens)
@@ -165,6 +173,24 @@ def generate_program(tokens, symbol_table):
             case 'NOP':
                 program.append(Instruction.NOP.value)
                 current_address += 1
+                current_token = next(tokens)
+            case 'LDI':
+                register = Register[next(tokens).value].value
+                value = next(tokens).value
+
+                program.append(
+                    Instruction.LDHI.value
+                    | register << 8
+                    | value >> 8
+                )
+
+                program.append(
+                    Instruction.LDLI.value
+                    | register << 8
+                    | value & int('0x00ff', 0)
+                )
+
+                current_address += 2
                 current_token = next(tokens)
             case 'LDHI':
                 program.append(
