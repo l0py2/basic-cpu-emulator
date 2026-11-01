@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-# https://docs.python.org/3/library/re.html#writing-a-tokenizer
-
 from typing import NamedTuple
 import re
 from enum import Enum
 from itertools import tee
 from ctypes import c_uint16
+from sys import argv
 
 class Instruction(Enum):
     NOP   = 0 << 11
@@ -234,12 +233,16 @@ def write_program_file(path, program):
         for value in program:
             file.write(c_uint16(value))
 
-symbol_tokens, program_tokens = tee(tokenize_file('./examples/new-basic.asm'), 2)
+if len(argv) < 3:
+    print(f'Usage: {argv[0]} [input path] [output path]')
+    exit(1)
+
+symbol_tokens, program_tokens = tee(tokenize_file(argv[1]), 2)
 
 symbol_table = generate_symbol_table(symbol_tokens)
 program = generate_program(program_tokens, symbol_table)
 
-write_program_file('./out.bin', program)
+write_program_file(argv[2], program)
 
 print('=== Symbol Table ===')
 for symbol, value in symbol_table.items():

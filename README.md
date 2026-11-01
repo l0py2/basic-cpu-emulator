@@ -1,5 +1,9 @@
 # Basic CPU ~~Emulator~~
 
+## Thanks to
+
+- [https://docs.python.org/3/library/re.html#writing-a-tokenizer](https://docs.python.org/3/library/re.html#writing-a-tokenizer)
+
 ## Instructions
 
 ### Format
