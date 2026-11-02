@@ -1,5 +1,4 @@
 cpu
 debug
-vga-text
 *.o
 *.bin
