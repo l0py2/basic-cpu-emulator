@@ -4,7 +4,7 @@ from typing import NamedTuple
 import re
 from enum import Enum
 from itertools import tee
-from ctypes import c_uint16
+from ctypes import c_uint16, c_int8
 from sys import argv
 
 class Token(NamedTuple):
@@ -18,6 +18,7 @@ def tokenize(code, instructions, pseudo_instructions, registers):
         ('COMMENT', r'#[^\n]*'),
         ('HEX_NUM', r'0x[0-9a-fA-F]+'),
         ('BIN_NUM', r'0b[01]+'),
+        ('NEG_DEC_NUM', r'-[0-9]+'),
         ('DEC_NUM', r'[0-9]+'),
         ('LABEL', r'[a-zA-Z0-9_]+:'),
         ('ID', r'[a-zA-Z0-9_]+'),
@@ -47,6 +48,9 @@ def tokenize(code, instructions, pseudo_instructions, registers):
         elif kind == 'HEX_NUM':
             kind = 'NUMBER'
             value = int(value, 16)
+        elif kind == 'NEG_DEC_NUM':
+            kind = 'NUMBER'
+            value = int(value, 10)
         elif kind == 'DEC_NUM':
             kind = 'NUMBER'
             value = int(value, 10)
@@ -128,6 +132,14 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         )
                         current_address += 1
                         current_token = next(tokens)
+                    case 'ADDI':
+                        program.append(
+                            instructions['ADDI']
+                            | registers[next(tokens).value] << 8
+                            | (next(tokens).value & 0x00ff)
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
                     case 'JUMP':
                         program.append(
                             instructions['JUMP']
@@ -142,13 +154,13 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         program.append(
                             instructions['LDHI']
                             | register << 8
-                            | value >> 8
+                            | (value & 0xff00) >> 8
                         )
 
                         program.append(
                             instructions['LDLI']
                             | register << 8
-                            | value & int('0x00ff', 0)
+                            | value & 0x00ff
                         )
 
                         current_address += 2
@@ -172,12 +184,12 @@ if len(argv) < 3:
 
 # name: value
 instructions = {
-    'NOP':  0  << 11,
-    'LDHI': 1  << 11,
-    'LDLI': 2  << 11,
-    'JUMP': 22 << 11
+    'NOP':  0 << 11,
+    'LDHI': 1 << 11,
+    'LDLI': 2 << 11,
+    'ADDI': 3 << 11,
+    'JUMP': 4 << 11
 }
-
 
 # name: instruction count
 pseudo_instructions = {

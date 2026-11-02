@@ -113,7 +113,7 @@ void execute() {
 	iregister = extract_register(cpu->memory[cpu->pc]);
 	ivalue = extract_value(cpu->memory[cpu->pc]);
 
-	switch(cpu->memory[cpu->pc] >> 11) {
+	switch(cpu->memory[cpu->pc] & 0b11111 << 11) {
 		case NOP:
 			cpu->pc++;
 			break;
@@ -129,130 +129,20 @@ void execute() {
 				| (cpu->registers[iregister] & 0xff00);
 			cpu->pc++;
 			break;
-		case LDM:
-			cpu->registers[iregister] = cpu->memory[cpu->registers[extract_register(ivalue << 8)]];
-			cpu->pc++;
-			break;
-		case SVM:
-			cpu->memory[cpu->registers[extract_register(ivalue << 8)]] = cpu->registers[iregister];
-			cpu->pc++;
-			break;
-		case COPY:
-			cpu->registers[iregister] = cpu->registers[extract_register(ivalue << 8)];
-			cpu->pc++;
-			break;
 		case ADDI:
+			// Preserve signal
+			if(ivalue & 0b10000000) {
+				ivalue |= 0xff00;
+			}
+
 			cpu->registers[iregister] += ivalue;
-			cpu->pc++;
-			break;
-		case SUBI:
-			cpu->registers[iregister] -= ivalue;
-			cpu->pc++;
-			break;
-		case COMPI:
-			temp = cpu->registers[iregister] - ivalue;
-
-			cpu->registers[FLAGS] = cpu->registers[FLAGS] & ~(ZERO | OVERFLOW);
-
-			if(temp == 0) {
-				cpu->registers[FLAGS] = cpu->registers[FLAGS] | ZERO;
-			}
-
-			if(temp > cpu->registers[iregister]) {
-				cpu->registers[FLAGS] = cpu->registers[FLAGS] | OVERFLOW;
-			}
-
-			cpu->pc++;
-			break;
-		case SLI:
-			cpu->registers[iregister] = cpu->registers[iregister] << ivalue;
-			cpu->pc++;
-			break;
-		case SRI:
-			cpu->registers[iregister] = cpu->registers[iregister] >> ivalue;
-			cpu->pc++;
-			break;
-		case CLR:
-			cpu->registers[iregister] = 0x0000;
-			cpu->pc++;
-			break;
-		case SET:
-			cpu->registers[iregister] = 0xffff;
-			cpu->pc++;
-			break;
-		case NOT:
-			cpu->registers[iregister] = ~cpu->registers[iregister];
-			cpu->pc++;
-			break;
-		case ADD:
-			cpu->registers[iregister] += cpu->registers[extract_register(ivalue << 8)];
-			cpu->pc++;
-			break;
-		case SUB:
-			cpu->registers[iregister] -= cpu->registers[extract_register(ivalue << 8)];
-			cpu->pc++;
-			break;
-		case COMP:
-			temp = cpu->registers[iregister]
-				- cpu->registers[extract_register(ivalue << 8)];
-
-			cpu->registers[FLAGS] = cpu->registers[FLAGS] & ~(ZERO | OVERFLOW);
-
-			if(temp == 0) {
-				cpu->registers[FLAGS] = cpu->registers[FLAGS] | ZERO;
-			}
-
-			if(temp > cpu->registers[iregister]) {
-				cpu->registers[FLAGS] = cpu->registers[FLAGS] | OVERFLOW;
-			}
-
-			cpu->pc++;
-			break;
-		case AND:
-			cpu->registers[iregister] &= cpu->registers[extract_register(ivalue << 8)];
-			cpu->pc++;
-			break;
-		case OR:
-			cpu->registers[iregister] |= cpu->registers[extract_register(ivalue << 8)];
 			cpu->pc++;
 			break;
 		case JUMP:
 			cpu->pc = ivalue;
 			break;
-		case BRNEQ:
-			if(cpu->registers[FLAGS] & ZERO) {
-				cpu->pc++;
-			} else {
-				cpu->pc = ivalue;
-			}
-			break;
-		case BREQ:
-			if(cpu->registers[FLAGS] & ZERO) {
-				cpu->pc = ivalue;
-			} else {
-				cpu->pc++;
-			}
-			break;
-		case CALL:
-			cpu->memory[cpu->sp] = cpu->pc + 1;
-			cpu->sp--;
-			cpu->pc = ivalue;
-			break;
-		case PUSH:
-			cpu->memory[cpu->sp] = cpu->registers[iregister];
-			cpu->sp--;
-			cpu->pc++;
-			break;
-		case POP:
-			cpu->sp++;
-			cpu->registers[iregister] = cpu->memory[cpu->sp];
-			cpu->pc++;
-			break;
-		case RET:
-			cpu->sp++;
-			cpu->pc = cpu->memory[cpu->sp];
-			break;
 		default:
+			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);
 			cpu->pc++;
 			break;
 	}

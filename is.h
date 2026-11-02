@@ -10,59 +10,23 @@
 typedef uint16_t word;
 
 typedef enum {
-	NOP = 0b00000,
-	// Memory
-	LDHI,
-	LDLI,
-	LDM,
-	SVM,
-	COPY,
-	// Arithmetic
-	ADDI,
-	SUBI,
-	ADD,
-	SUB,
-	MULT,
-	DIV,
-	MOD,
-	// Comparison
-	COMPI,
-	COMP,
-	// Bit-wise
-	SLI,
-	SRI,
-	CLR,
-	SET,
-	NOT,
-	AND,
-	OR,
-	// Branching
-	JUMP,
-	BRNEQ,
-	BREQ,
-	CALL,
-	// Stack
-	PUSH,
-	POP,
-	RET
+	NOP  = 0b00000 << 11,
+	LDHI = 1 << 11,
+	LDLI = 2 << 11,
+	ADDI = 3 << 11,
+	JUMP = 4 << 11
 } instruction;
 
 typedef enum {
 	R1 = 0b000,
-	R2 = 0b001,
-	R3 = 0b010,
-	R4 = 0b011,
-	R5 = 0b100,
-	R6 = 0b101,
-	R7 = 0b110,
-	R8 = 0b111,
-	FLAGS = R8
+	R2 = 1,
+	R3 = 2,
+	R4 = 3,
+	R5 = 4,
+	R6 = 5,
+	R7 = 6,
+	R8 = 7
 } rx;
-
-typedef enum {
-	ZERO     = 0b1000000000000000,
-	OVERFLOW = 0b0100000000000000
-} flags;
 
 typedef struct {
 	word pc;
