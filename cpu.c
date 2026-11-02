@@ -72,9 +72,6 @@ int main(int argc, char **argv) {
 
 	read_file(argv[1]);
 
-	int key;
-	unsigned int line = 0;
-
 	while(!exit_program) {
 		pause();
 	}

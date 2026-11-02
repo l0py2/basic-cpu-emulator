@@ -7,3 +7,4 @@
 - [ ] Ports for communication
 - [ ] Support for signed values and operations
 - [ ] Branch if register is zero
+- [ ] Convert SP register to a general register

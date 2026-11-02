@@ -7,75 +7,19 @@ from itertools import tee
 from ctypes import c_uint16
 from sys import argv
 
-class Instruction(Enum):
-    NOP   = 0 << 11
-    # Memory
-    LDHI  = 1 << 11
-    LDLI  = 2 << 11
-    LDM   = 3 << 11
-    SVM   = 4 << 11
-    COPY  = 5 << 11
-    # Arithmetic
-    ADDI  = 6 << 11
-    SUBI  = 7 << 11
-    ADD   = 8 << 11
-    SUB   = 9 << 11
-    MULT  = 10 << 11
-    DIV   = 11 << 11
-    MOD   = 12 << 11
-    # Comparison
-    COMPI = 13 << 11
-    COMP  = 14 << 11
-    # Bit-wise
-    SLI   = 15 << 11
-    SRI   = 16 << 11
-    CLR   = 17 << 11
-    SET   = 18 << 11
-    NOT   = 19 << 11
-    AND   = 20 << 11
-    OR    = 21 << 11
-    # Branching
-    JUMP  = 22 << 11
-    BRNEQ = 23 << 11
-    BREQ  = 24 << 11
-    CALL  = 25 << 11
-    # Stack
-    PUSH  = 26 << 11
-    POP   = 27 << 11
-    RET   = 28 << 11
-
-class Register(Enum):
-    R1 = 0
-    R2 = 1
-    R3 = 2
-    R4 = 3
-    R5 = 4
-    R6 = 5
-    R7 = 6
-    R8 = 7
-
 class Token(NamedTuple):
     type: str
     value: str
     line: int
     column: int
 
-def tokenize(code):
-    # Initialize with pseudo instructions
-    keywords = [
-        'LDI'
-    ]
-
-    for instruction in Instruction:
-        keywords.append(instruction.name)
-
+def tokenize(code, instructions, pseudo_instructions, registers):
     token_specification = [
         ('COMMENT', r'#[^\n]*'),
         ('HEX_NUM', r'0x[0-9a-fA-F]+'),
         ('BIN_NUM', r'0b[01]+'),
         ('DEC_NUM', r'[0-9]+'),
         ('LABEL', r'[a-zA-Z0-9_]+:'),
-        ('REGISTER', r'R[0-9]'),
         ('ID', r'[a-zA-Z0-9_]+'),
         ('NEWLINE', r'\n'),
         ('EMPTY', r'[ \t]+'),
@@ -92,16 +36,22 @@ def tokenize(code):
         value = lexeme.group()
         column = lexeme.start() - line_start
 
-        if kind == 'ID' and value in keywords:
-            kind = value
-            value = ''
+        if kind == 'ID' and value in instructions:
+            kind = 'INSTRUCTION'
+        elif kind == 'ID' and value in pseudo_instructions:
+            kind = 'PSEUDO_INSTRUCTION'
+        elif kind == 'ID' and value in registers:
+            kind = 'REGISTER'
         elif kind == 'LABEL':
             value = value[:-1]
         elif kind == 'HEX_NUM':
+            kind = 'NUMBER'
             value = int(value, 16)
         elif kind == 'DEC_NUM':
+            kind = 'NUMBER'
             value = int(value, 10)
         elif kind == 'BIN_NUM':
+            kind = 'NUMBER'
             value = int(value, 2)
         elif kind == 'COMMENT':
             continue
@@ -118,13 +68,13 @@ def tokenize(code):
 
     yield Token('END', '', line_num, column)
 
-def tokenize_file(path):
+def read_file(path):
     with open(path, 'r') as file:
-        src = file.read()
+        return file.read()
 
-        return tokenize(src)
+    return ''
 
-def generate_symbol_table(tokens):
+def generate_symbol_table(tokens, pseudo_instructions):
     symbol_table = {}
     current_address = 0
 
@@ -135,37 +85,18 @@ def generate_symbol_table(tokens):
             case 'LABEL':
                 symbol_table[current_token.value] = current_address
                 current_token = next(tokens)
-            case 'LDI':
-                next(tokens)
-                next(tokens)
-                current_address += 2
-                current_token = next(tokens)
-            case 'NOP':
+            case 'INSTRUCTION':
                 current_address += 1
                 current_token = next(tokens)
-            case 'LDHI':
-                next(tokens)
-                next(tokens)
-                current_address += 1
-                current_token = next(tokens)
-            case 'LDLI':
-                next(tokens)
-                next(tokens)
-                current_address += 1
-                current_token = next(tokens)
-            case 'JUMP':
-                next(tokens)
-                current_address += 1
+            case 'PSEUDO_INSTRUCTION':
+                current_address += pseudo_instructions[current_token.value]
                 current_token = next(tokens)
             case _:
-                raise RuntimeError(
-                    f'"{current_token.value}({current_token.type})"'
-                    + f' invalid token on line {current_token.line}'
-                )
+                current_token = next(tokens)
 
     return symbol_table
 
-def generate_program(tokens, symbol_table):
+def generate_program(tokens, symbol_table, instructions, pseudo_instructions, registers):
     program = []
     current_address = 0
 
@@ -175,51 +106,53 @@ def generate_program(tokens, symbol_table):
         match current_token.type:
             case 'LABEL':
                 current_token = next(tokens)
-            case 'NOP':
-                program.append(Instruction.NOP.value)
-                current_address += 1
-                current_token = next(tokens)
-            case 'LDI':
-                register = Register[next(tokens).value].value
-                value = next(tokens).value
+            case 'INSTRUCTION' | 'PSEUDO_INSTRUCTION':
+                match current_token.value:
+                    case 'NOP':
+                        program.append(instructions['NOP'])
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'LDHI':
+                        program.append(
+                            instructions['LDHI']
+                            | registers[next(tokens).value] << 8
+                            | next(tokens).value
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'LDLI':
+                        program.append(
+                            instructions['LDLI']
+                            | registers[next(tokens).value] << 8
+                            | next(tokens).value
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'JUMP':
+                        program.append(
+                            instructions['JUMP']
+                            | symbol_table[next(tokens).value]
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'LDI':
+                        register = registers[next(tokens).value]
+                        value = next(tokens).value
 
-                program.append(
-                    Instruction.LDHI.value
-                    | register << 8
-                    | value >> 8
-                )
+                        program.append(
+                            instructions['LDHI']
+                            | register << 8
+                            | value >> 8
+                        )
 
-                program.append(
-                    Instruction.LDLI.value
-                    | register << 8
-                    | value & int('0x00ff', 0)
-                )
+                        program.append(
+                            instructions['LDLI']
+                            | register << 8
+                            | value & int('0x00ff', 0)
+                        )
 
-                current_address += 2
-                current_token = next(tokens)
-            case 'LDHI':
-                program.append(
-                    Instruction.LDHI.value
-                    | Register[next(tokens).value].value << 8
-                    | next(tokens).value
-                )
-                current_address += 1
-                current_token = next(tokens)
-            case 'LDLI':
-                program.append(
-                    Instruction.LDLI.value
-                    | Register[next(tokens).value].value << 8
-                    | next(tokens).value
-                )
-                current_address += 1
-                current_token = next(tokens)
-            case 'JUMP':
-                program.append(
-                    Instruction.JUMP.value
-                    | symbol_table[next(tokens).value]
-                )
-                current_address += 1
-                current_token = next(tokens)
+                        current_address += 2
+                        current_token = next(tokens)
             case _:
                 raise RuntimeError(
                     f'"{current_token.value}({current_token.type})"'
@@ -237,10 +170,41 @@ if len(argv) < 3:
     print(f'Usage: {argv[0]} [input path] [output path]')
     exit(1)
 
-symbol_tokens, program_tokens = tee(tokenize_file(argv[1]), 2)
+# name: value
+instructions = {
+    'NOP':  0  << 11,
+    'LDHI': 1  << 11,
+    'LDLI': 2  << 11,
+    'JUMP': 22 << 11
+}
 
-symbol_table = generate_symbol_table(symbol_tokens)
-program = generate_program(program_tokens, symbol_table)
+
+# name: instruction count
+pseudo_instructions = {
+    'LDI': 2
+}
+
+# name: value
+registers = {
+    'R1': 0,
+    'R2': 1,
+    'R3': 2,
+    'R4': 3,
+    'R5': 4,
+    'R6': 5,
+    'R7': 6,
+    'R8': 7
+}
+
+src = read_file(argv[1])
+
+symbol_tokens, program_tokens = tee(
+    tokenize(src, instructions, pseudo_instructions, registers),
+    2
+)
+
+symbol_table = generate_symbol_table(symbol_tokens, pseudo_instructions)
+program = generate_program(program_tokens, symbol_table, instructions, pseudo_instructions, registers)
 
 write_program_file(argv[2], program)
 
