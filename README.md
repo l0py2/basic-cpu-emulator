@@ -10,7 +10,23 @@
 
 **\[opcode 5 bits\] \[register 3 bits\] \[value 8 bits\]**
 
-### Opcodes
+### New instructions
+
+| mnemonic | description                          | result                         |
+| -------- | ------------------------------------ | ------------------------------ |
+| NOP      | no operation                         |                                |
+| LDHI     | load immediate to register high byte | RX = imm << 8 \| (RX & 0x00ff) |
+| LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)      |
+| ADDI     | add immediate to register (signed)   | RX = RX + imm                  |
+
+
+### Pseudo instructions
+
+| mnemonic | description                | real instructions |
+| -------- | -------------------------- | ----------------- |
+| LDI      | load immediate to register | LDHI + LDLI       |
+
+### Old mnemonics
 
 - NOP (no operation)
 
