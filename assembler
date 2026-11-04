@@ -105,6 +105,9 @@ def generate_symbol_table(tokens, pseudo_instructions):
                         symbol_value = next(tokens).value
                         symbol_table[symbol_id] = symbol_value
                         current_token = next(tokens)
+                    case 'RESERVE':
+                        current_address += next(tokens).value
+                        current_token = next(tokens)
                     case _:
                         current_token = next(tokens)
             case _:
@@ -178,7 +181,19 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         current_token = next(tokens)
                     case 'LDI':
                         register = registers[next(tokens).value]
-                        value = next(tokens).value
+                        value = 0
+
+                        value_token = next(tokens)
+                        match value_token.type:
+                            case 'ID':
+                                value = symbol_table[value_token.value]
+                            case 'NUMBER':
+                                value = value_token.value
+                            case _:
+                                raise RuntimeError(
+                                    f'"{value_token.value}({value_token.type})"'
+                                    + f' invalid token on line {value_token.line}'
+                                )
 
                         program.append(
                             instructions['LDHI']

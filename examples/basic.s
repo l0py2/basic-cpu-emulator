@@ -1,6 +1,6 @@
 # Test directives
-.DEF test 0x0001
-.RESERVE 10
+.DEF test_value 0xf0f0
+.RESERVE 3
 
 # Test comment
 start: # Test inline comment
@@ -15,6 +15,8 @@ start: # Test inline comment
 	NOP
 	LDI R4 -1 # Test signed load
 	ADDI R4 2
+	NOP
+	LDI R5 test_value
 	NOP
 	LDHI R8 0xff
 	LDLI R8 0b01010101
