@@ -14,8 +14,8 @@ run-example: cpu out.bin
 view-example: out.bin
 	hexdump -x out.bin
 
-out.bin: assembler examples/$(EXAMPLE).asm
-	./assembler examples/$(EXAMPLE).asm out.bin
+out.bin: assembler examples/$(EXAMPLE).s
+	./assembler examples/$(EXAMPLE).s out.bin
 
 cpu: cpu.o
 debug: debug.o

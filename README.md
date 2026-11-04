@@ -26,6 +26,13 @@
 | -------- | -------------------------- | ----------------- |
 | LDI      | load immediate to register | LDHI + LDLI       |
 
+### Assembler directives
+
+| mnemonic | description                              |
+| -------- | ---------------------------------------- |
+| .DEF     | define a symbol                          |
+| .RESERVE | create a block of memory filled with NOP |
+
 ### Old mnemonics
 
 - NOP (no operation)

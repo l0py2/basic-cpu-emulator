@@ -21,6 +21,7 @@ def tokenize(code, instructions, pseudo_instructions, registers):
         ('NEG_DEC_NUM', r'-[0-9]+'),
         ('DEC_NUM', r'[0-9]+'),
         ('LABEL', r'[a-zA-Z0-9_]+:'),
+        ('DIRECTIVE', r'\.[a-zA-Z0-9_]+'),
         ('ID', r'[a-zA-Z0-9_]+'),
         ('NEWLINE', r'\n'),
         ('EMPTY', r'[ \t]+'),
@@ -45,6 +46,8 @@ def tokenize(code, instructions, pseudo_instructions, registers):
             kind = 'REGISTER'
         elif kind == 'LABEL':
             value = value[:-1]
+        elif kind == 'DIRECTIVE':
+            value = value[1:]
         elif kind == 'HEX_NUM':
             kind = 'NUMBER'
             value = int(value, 16)
@@ -95,6 +98,15 @@ def generate_symbol_table(tokens, pseudo_instructions):
             case 'PSEUDO_INSTRUCTION':
                 current_address += pseudo_instructions[current_token.value]
                 current_token = next(tokens)
+            case 'DIRECTIVE':
+                match current_token.value:
+                    case 'DEF':
+                        symbol_id = next(tokens).value
+                        symbol_value = next(tokens).value
+                        symbol_table[symbol_id] = symbol_value
+                        current_token = next(tokens)
+                    case _:
+                        current_token = next(tokens)
             case _:
                 current_token = next(tokens)
 
@@ -110,6 +122,23 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
         match current_token.type:
             case 'LABEL':
                 current_token = next(tokens)
+            case 'DIRECTIVE':
+                match current_token.value:
+                    case 'DEF':
+                        next(tokens)
+                        next(tokens)
+                        current_token = next(tokens)
+                    case 'RESERVE':
+                        for i in range(next(tokens).value):
+                            program.append(instructions['NOP'])
+                            current_address += 1
+
+                        current_token = next(tokens)
+                    case _:
+                        raise RuntimeError(
+                            f'"{current_token.value}({current_token.type})"'
+                            + f' invalid directive on line {current_token.line}'
+                        )
             case 'INSTRUCTION' | 'PSEUDO_INSTRUCTION':
                 match current_token.value:
                     case 'NOP':

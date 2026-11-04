@@ -1,3 +1,7 @@
+# Test directives
+.DEF test 0x0001
+.RESERVE 10
+
 # Test comment
 start: # Test inline comment
 	NOP
