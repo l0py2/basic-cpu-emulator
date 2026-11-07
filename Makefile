@@ -14,10 +14,12 @@ view-%: %.bin
 run-%: %.bin cpu
 	./cpu $<
 
-cpu: cpu.o
+cpu: cpu.o cpu-ui.o cpu-core.o
 	$(CC) $^ `pkg-config --libs ncurses` -o $@
 
-new-cpu.o: new-cpu.c is.h
+cpu.o: cpu.c is.h cpu-ui.h cpu-core.h
+cpu-ui.o: cpu-ui.c is.h
+cpu-core.o: cpu-core.c is.h
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c -o $@
