@@ -179,6 +179,22 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         )
                         current_address += 1
                         current_token = next(tokens)
+                    case 'LDM':
+                        program.append(
+                            instructions['LDM']
+                            | registers[next(tokens).value] << 8
+                            | registers[next(tokens).value]
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'SVM':
+                        program.append(
+                            instructions['SVM']
+                            | registers[next(tokens).value] << 8
+                            | registers[next(tokens).value]
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
                     case 'LDI':
                         register = registers[next(tokens).value]
                         value = 0
@@ -232,7 +248,9 @@ instructions = {
     'LDHI':  1 << 11,
     'LDLI':  2 << 11,
     'ADDI':  3 << 11,
-    'RJUMP': 4 << 11
+    'RJUMP': 4 << 11,
+    'LDM':   5 << 11,
+    'SVM':   6 << 11
 }
 
 # name: instruction count

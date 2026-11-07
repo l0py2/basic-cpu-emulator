@@ -14,7 +14,9 @@ typedef enum {
 	LDHI  = 1 << 11,
 	LDLI  = 2 << 11,
 	ADDI  = 3 << 11,
-	RJUMP = 4 << 11
+	RJUMP = 4 << 11,
+	LDM   = 5 << 11,
+	SVM   = 6 << 11
 } instruction;
 
 typedef enum {

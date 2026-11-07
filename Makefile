@@ -31,7 +31,7 @@ cpu-core.o: cpu-core.c is.h
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-%.bin: examples/%.s
+%.bin: examples/%.s assembler
 	./assembler $< $@
 
 .NOTINTERMEDIATE: %.bin

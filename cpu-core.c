@@ -26,6 +26,8 @@ void read_file(char *path) {
 void setup_cpu(char *path, cpu_t *new_cpu) {
 	cpu = new_cpu;
 
+	cpu->pc = 0;
+
 	for(unsigned int i = 0; i < MEMORY_SIZE; i++) {
 		cpu->memory[i] = NOP;
 	}
@@ -82,6 +84,14 @@ void execute() {
 			}
 
 			cpu->pc += ivalue;
+			break;
+		case LDM:
+			cpu->registers[iregister] = cpu->memory[cpu->registers[extract_register(ivalue << 8)]];
+			cpu->pc++;
+			break;
+		case SVM:
+			cpu->memory[cpu->registers[iregister]] = cpu->registers[extract_register(ivalue << 8)];
+			cpu->pc++;
 			break;
 		default:
 			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);

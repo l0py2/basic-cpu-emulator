@@ -19,6 +19,8 @@
 | LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)      |
 | ADDI     | add immediate to register (signed)   | RX = RX + imm                  |
 | RJUMP    | relative jump (signed)               | PC = PC + imm                  |
+| LDM      | load value from memory to register   | RY = mem\[RX\]                 |
+| SVM      | save value to memory from register   | mem\[RX\] = RY                 |
 
 ### Pseudo instructions
 
