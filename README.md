@@ -12,15 +12,19 @@
 
 ### New instructions
 
-| mnemonic | description                          | result                         |
-| -------- | ------------------------------------ | ------------------------------ |
-| NOP      | no operation                         |                                |
-| LDHI     | load immediate to register high byte | RX = imm << 8 \| (RX & 0x00ff) |
-| LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)      |
-| ADDI     | add immediate to register (signed)   | RX = RX + imm                  |
-| RJUMP    | relative jump (signed)               | PC = PC + imm                  |
-| LDM      | load value from memory to register   | RY = mem\[RX\]                 |
-| SVM      | save value to memory from register   | mem\[RX\] = RY                 |
+| mnemonic | description                          | result                            |
+| -------- | ------------------------------------ | --------------------------------- |
+| NOP      | no operation                         |                                   |
+| LDHI     | load immediate to register high byte | RX = imm << 8 \| (RX & 0x00ff)    |
+| LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)         |
+| ADDI     | add immediate to register (signed)   | RX = RX + imm                     |
+| RJUMP    | relative jump (signed)               | PC = PC + imm                     |
+| LDM      | load value from memory to register   | RY = mem\[RX\]                    |
+| SVM      | save value to memory from register   | mem\[RX\] = RY                    |
+| PUSH     | save value to satck from register    | mem\[SP\] = RX, SP = SP + 1       |
+| POP      | load value from stack to register    | RX = mem\[SP\], SP = SP - 1       |
+| RCALL    | relative call (signed)               | mem\[SP\] = PC + 1, PC = PC + imm |
+| RET      | return                               | PC = mem\[SP\], SP = SP - 1       |
 
 ### Pseudo instructions
 

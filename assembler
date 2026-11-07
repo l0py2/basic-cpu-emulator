@@ -195,6 +195,31 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         )
                         current_address += 1
                         current_token = next(tokens)
+                    case 'PUSH':
+                        program.append(
+                            instructions['SVM']
+                            | registers[next(tokens).value] << 8
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'POP':
+                        program.append(
+                            instructions['SVM']
+                            | registers[next(tokens).value] << 8
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'RCALL':
+                        program.append(
+                            instructions['RCALL']
+                            | symbol_table[next(tokens).value] - current_address
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'RET':
+                        program.append(instructions['RET'])
+                        current_address += 1
+                        current_token = next(tokens)
                     case 'LDI':
                         register = registers[next(tokens).value]
                         value = 0
@@ -244,13 +269,17 @@ if len(argv) < 3:
 
 # name: value
 instructions = {
-    'NOP':   0 << 11,
-    'LDHI':  1 << 11,
-    'LDLI':  2 << 11,
-    'ADDI':  3 << 11,
-    'RJUMP': 4 << 11,
-    'LDM':   5 << 11,
-    'SVM':   6 << 11
+    'NOP':    0 << 11,
+    'LDHI':   1 << 11,
+    'LDLI':   2 << 11,
+    'ADDI':   3 << 11,
+    'RJUMP':  4 << 11,
+    'LDM':    5 << 11,
+    'SVM':    6 << 11,
+    'PUSH':   7 << 11,
+    'POP':    8 << 11,
+    'RCALL':  9 << 11,
+    'RET':   10 << 11
 }
 
 # name: instruction count

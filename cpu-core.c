@@ -27,6 +27,7 @@ void setup_cpu(char *path, cpu_t *new_cpu) {
 	cpu = new_cpu;
 
 	cpu->pc = 0;
+	cpu->sp = 0xffff;
 
 	for(unsigned int i = 0; i < MEMORY_SIZE; i++) {
 		cpu->memory[i] = NOP;
@@ -92,6 +93,29 @@ void execute() {
 		case SVM:
 			cpu->memory[cpu->registers[iregister]] = cpu->registers[extract_register(ivalue << 8)];
 			cpu->pc++;
+			break;
+		case PUSH:
+			cpu->memory[cpu->sp] = cpu->registers[iregister];
+			cpu->sp--;
+			cpu->pc++;
+			break;
+		case POP:
+			cpu->sp++;
+			cpu->registers[iregister] = cpu->memory[cpu->sp];
+			cpu->pc++;
+			break;
+		case RCALL:
+			if(ivalue & 0b10000000) {
+				ivalue |= 0xff00;
+			}
+
+			cpu->memory[cpu->sp] = cpu->pc + 1;
+			cpu->sp--;
+			cpu->pc += ivalue;
+			break;
+		case RET:
+			cpu->sp++;
+			cpu->pc = cpu->memory[cpu->sp];
 			break;
 		default:
 			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);
