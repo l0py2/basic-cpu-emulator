@@ -1,16 +1,6 @@
 #ifndef CPU_UI_H
 #define CPU_UI_H
 
-#include <fcntl.h>
-#include <ncurses.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-
 #include "is.h"
 
 #define HELP_WINDOW_LINES 4
