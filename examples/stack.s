@@ -1,13 +1,14 @@
 setup:
-	LDI R1 1
+	LDLI R1 1
 	NOP
 	RCALL test
-	LDI R1 3
+	LDLI R1 3
 	NOP
 loop:
+	ADDI R1 1
 	RJUMP loop
 
 test:
-	LDI R1 2
+	LDLI R1 2
 	NOP
 	RET

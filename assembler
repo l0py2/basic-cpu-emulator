@@ -175,7 +175,7 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                     case 'RJUMP':
                         program.append(
                             instructions['RJUMP']
-                            | symbol_table[next(tokens).value] - current_address
+                            | ((symbol_table[next(tokens).value] - current_address) & 0x00ff)
                         )
                         current_address += 1
                         current_token = next(tokens)
@@ -212,7 +212,7 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                     case 'RCALL':
                         program.append(
                             instructions['RCALL']
-                            | symbol_table[next(tokens).value] - current_address
+                            | ((symbol_table[next(tokens).value] - current_address) & 0x00ff)
                         )
                         current_address += 1
                         current_token = next(tokens)
