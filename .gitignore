@@ -1,3 +1,5 @@
 cpu
+auto-cpu
+char-display
 *.o
 *.bin
