@@ -172,10 +172,10 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         )
                         current_address += 1
                         current_token = next(tokens)
-                    case 'JUMP':
+                    case 'RJUMP':
                         program.append(
-                            instructions['JUMP']
-                            | symbol_table[next(tokens).value]
+                            instructions['RJUMP']
+                            | symbol_table[next(tokens).value] - current_address
                         )
                         current_address += 1
                         current_token = next(tokens)
@@ -228,11 +228,11 @@ if len(argv) < 3:
 
 # name: value
 instructions = {
-    'NOP':  0 << 11,
-    'LDHI': 1 << 11,
-    'LDLI': 2 << 11,
-    'ADDI': 3 << 11,
-    'JUMP': 4 << 11
+    'NOP':   0 << 11,
+    'LDHI':  1 << 11,
+    'LDLI':  2 << 11,
+    'ADDI':  3 << 11,
+    'RJUMP': 4 << 11
 }
 
 # name: instruction count
@@ -269,5 +269,5 @@ for symbol, value in symbol_table.items():
     print(f'{symbol} = {value}')
 
 print('=== Program Memory ===')
-for value in program:
-    print(f'0x{format(value, '04x')} = 0b{format(value, '016b')}')
+for i in range(len(program)):
+    print(f'0x{format(i, '04x')}: 0x{format(program[i], '04x')} = 0b{format(program[i], '016b')}')

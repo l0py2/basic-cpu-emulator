@@ -10,11 +10,11 @@
 typedef uint16_t word;
 
 typedef enum {
-	NOP  = 0b00000 << 11,
-	LDHI = 1 << 11,
-	LDLI = 2 << 11,
-	ADDI = 3 << 11,
-	JUMP = 4 << 11
+	NOP   = 0b00000 << 11,
+	LDHI  = 1 << 11,
+	LDLI  = 2 << 11,
+	ADDI  = 3 << 11,
+	RJUMP = 4 << 11
 } instruction;
 
 typedef enum {

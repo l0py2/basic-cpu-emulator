@@ -1,6 +1,6 @@
 # Test directives
 .DEF test_value 0xf0f0
-.RESERVE 3
+.RESERVE 4
 
 # Test comment
 start: # Test inline comment
@@ -20,5 +20,9 @@ start: # Test inline comment
 	NOP
 	LDHI R8 0xff
 	LDLI R8 0b01010101
+	RJUMP loop
+	NOP
+	NOP
+	NOP
 loop:
-	JUMP loop
+	RJUMP loop

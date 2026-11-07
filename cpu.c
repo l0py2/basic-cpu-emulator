@@ -138,8 +138,12 @@ void execute() {
 			cpu->registers[iregister] += ivalue;
 			cpu->pc++;
 			break;
-		case JUMP:
-			cpu->pc = ivalue;
+		case RJUMP:
+			if(ivalue & 0b10000000) {
+				ivalue |= 0xff00;
+			}
+
+			cpu->pc += ivalue;
 			break;
 		default:
 			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);
