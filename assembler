@@ -220,6 +220,22 @@ def generate_program(tokens, symbol_table, instructions, pseudo_instructions, re
                         program.append(instructions['RET'])
                         current_address += 1
                         current_token = next(tokens)
+                    case 'RBREZ':
+                        program.append(
+                            instructions['RBREZ']
+                            | registers[next(tokens).value] << 8
+                            | ((symbol_table[next(tokens).value] - current_address) & 0x00ff)
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
+                    case 'RBRNZ':
+                        program.append(
+                            instructions['RBRNZ']
+                            | registers[next(tokens).value] << 8
+                            | ((symbol_table[next(tokens).value] - current_address) & 0x00ff)
+                        )
+                        current_address += 1
+                        current_token = next(tokens)
                     case 'LDI':
                         register = registers[next(tokens).value]
                         value = 0
@@ -279,7 +295,9 @@ instructions = {
     'PUSH':   7 << 11,
     'POP':    8 << 11,
     'RCALL':  9 << 11,
-    'RET':   10 << 11
+    'RET':   10 << 11,
+    'RBREZ': 11 << 11,
+    'RBRNZ': 12 << 11
 }
 
 # name: instruction count

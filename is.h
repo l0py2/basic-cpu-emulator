@@ -20,7 +20,9 @@ typedef enum {
 	PUSH  = 7  << 11,
 	POP   = 8  << 11,
 	RCALL = 9  << 11,
-	RET   = 10 << 11
+	RET   = 10 << 11,
+	RBREZ = 11 << 11,
+	RBRNZ = 12 << 11
 } instruction;
 
 typedef enum {

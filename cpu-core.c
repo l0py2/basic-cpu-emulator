@@ -117,6 +117,34 @@ void execute() {
 			cpu->sp++;
 			cpu->pc = cpu->memory[cpu->sp];
 			break;
+		case RBREZ:
+			if(cpu->registers[iregister] != 0) {
+				cpu->pc++;
+				break;
+			}
+
+			if(ivalue & 0b10000000) {
+				ivalue |= 0xff00;
+			}
+
+			cpu->memory[cpu->sp] = cpu->pc + 1;
+			cpu->sp--;
+			cpu->pc += ivalue;
+			break;
+		case RBRNZ:
+			if(cpu->registers[iregister] == 0) {
+				cpu->pc++;
+				break;
+			}
+
+			if(ivalue & 0b10000000) {
+				ivalue |= 0xff00;
+			}
+
+			cpu->memory[cpu->sp] = cpu->pc + 1;
+			cpu->sp--;
+			cpu->pc += ivalue;
+			break;
 		default:
 			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);
 			cpu->pc++;
