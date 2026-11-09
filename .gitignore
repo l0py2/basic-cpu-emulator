@@ -1,5 +1,6 @@
 cpu
 auto-cpu
 char-display
+display
 *.o
 *.bin

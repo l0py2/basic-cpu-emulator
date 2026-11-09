@@ -1,4 +1,4 @@
-OUT := cpu auto-cpu char-display
+OUT := cpu auto-cpu char-display display
 
 CFLAGS := -Wall
 
@@ -21,6 +21,9 @@ auto-cpu: auto-cpu.o cpu-core.o
 
 char-display: char-display.o
 	$(CC) $^ -o $@
+
+display: display.o
+	$(CC) `pkg-config --libs raylib` -o $@ $^
 
 cpu.o: cpu.c is.h cpu-ui.h cpu-core.h
 auto-cpu.o: cpu.c is.h cpu-core.h
