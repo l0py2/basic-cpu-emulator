@@ -7,3 +7,5 @@ display
 *.bin
 
 out/
+
+__pycache__
