@@ -1,11 +1,13 @@
-OUT := cpu auto-cpu char-display display
+ASSEMBLER := assembler/assembler.py
+OUT_DIR := out
+OUT := debug-cpu auto-cpu char-display display
 
 CFLAGS := -Wall
 
 all: $(OUT)
 
 clean:
-	$(RM) -f *.bin *.o $(OUT)
+	$(RM) -r $(OUT_DIR) *.bin $(OUT)
 
 view-%: %.bin
 	hexdump -x $<
@@ -13,29 +15,34 @@ view-%: %.bin
 run-%: %.bin cpu
 	./cpu $<
 
-cpu: cpu.o cpu-ui.o cpu-core.o
-	$(CC) $^ `pkg-config --libs ncurses` -o $@
+debug-cpu: $(OUT_DIR)/cpu.o $(OUT_DIR)/cpu-ui.o $(OUT_DIR)/cpu-core.o
+	$(CC) `pkg-config --libs ncurses` -o $@ $^
 
-auto-cpu: auto-cpu.o cpu-core.o
-	$(CC) $^ -o $@
+auto-cpu: $(OUT_DIR)/auto-cpu.o $(OUT_DIR)/cpu-core.o
+	$(CC) -o $@ $^
 
-char-display: char-display.o
-	$(CC) $^ -o $@
+char-display: $(OUT_DIR)/char-display.o
+	$(CC) -o $@ $^
 
-display: display.o
+display: $(OUT_DIR)/display.o
 	$(CC) `pkg-config --libs raylib` -o $@ $^
 
-cpu.o: cpu.c is.h cpu-ui.h cpu-core.h
-auto-cpu.o: cpu.c is.h cpu-core.h
-char-display.o: char-display.c is.h
-cpu-ui.o: cpu-ui.c is.h
-cpu-core.o: cpu-core.c is.h
+$(OUT_DIR)/cpu.o: cpu/cpu.c cpu/is.h cpu/cpu-ui.h cpu/cpu-core.h
+$(OUT_DIR)/auto-cpu.o: cpu/cpu.c cpu/is.h cpu/cpu-core.h
+$(OUT_DIR)/cpu-core.o: cpu/cpu-core.c cpu/is.h
+$(OUT_DIR)/cpu-ui.o: cpu/cpu-ui.c cpu/is.h
 
-%.o: %.c
-	$(CC) $(CFLAGS) $< -c -o $@
+$(OUT_DIR)/char-display.o: devices/char-display.c cpu/is.h
+$(OUT_DIR)/display.o: devices/display.c cpu/is.h
 
-%.bin: examples/%.s assembler
-	./assembler $< $@
+$(OUT_DIR)/%.o: */%.c | $(OUT_DIR)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.bin: examples/%.s assembler/assembler.py
+	./assembler/assembler.py $< $@
+
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
 
 .NOTINTERMEDIATE: %.bin
 .PHONY: all clean run run-example view-example

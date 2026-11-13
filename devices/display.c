@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "is.h"
+#include "../cpu/is.h"
 
 #define SCREEN_WIDTH 400
 #define SCREEN_HEIGHT 400

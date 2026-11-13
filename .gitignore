@@ -1,6 +1,9 @@
-cpu
+debug-cpu
 auto-cpu
 char-display
 display
+
 *.o
 *.bin
+
+out/

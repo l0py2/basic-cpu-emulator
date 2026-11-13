@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "is.h"
+#include "../cpu/is.h"
 
 #define REFRESH_RATE_MICS 100000
 
