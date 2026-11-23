@@ -12,7 +12,7 @@ clean:
 view-%: %.bin
 	hexdump -x $<
 
-run-%: %.bin cpu
+run-%: %.bin auto-cpu
 	./cpu $<
 
 debug-cpu: $(OUT_DIR)/cpu.o $(OUT_DIR)/cpu-ui.o $(OUT_DIR)/cpu-core.o
