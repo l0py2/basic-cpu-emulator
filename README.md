@@ -10,38 +10,20 @@
 
 **\[opcode 5 bits\] \[register 3 bits\] \[value 8 bits\]**
 
-#### Existing
+### Other
 
-| mnemonic | description                                   | result                            |
-| -------- | --------------------------------------------- | --------------------------------- |
-| NOP      | no operation                                  |                                   |
-| LDHI     | load immediate to register high byte          | RX = imm << 8 \| (RX & 0x00ff)    |
-| LDLI     | load immediate to register low byte           | RX = imm \| (RX & 0xff00)         |
-| ADDI     | add immediate to register (signed)            | RX = RX + imm                     |
-| RJUMP    | relative jump (signed)                        | PC = PC + imm                     |
-| LDM      | load value from memory to register            | RY = mem\[RX\]                    |
-| SVM      | save value to memory from register            | mem\[RX\] = RY                    |
-| PUSH     | save value to satck from register             | mem\[SP\] = RX, SP = SP + 1       |
-| POP      | load value from stack to register             | RX = mem\[SP\], SP = SP - 1       |
-| RCALL    | relative call (signed)                        | mem\[SP\] = PC + 1, PC = PC + imm |
-| RET      | return                                        | PC = mem\[SP\], SP = SP - 1       |
-| RBREZ    | relative branch if register is equal to 0     | RX == 0 ? PC = PC + imm           |
-| RBRNZ    | relative branch if register is not equal to 0 | RX == 0 ? PC = PC + imm           |
+| mnemonic | description  | result      |
+| -------- | ------------ | ----------- |
+| NOP      | no operation | PC = PC + 1 |
 
-### Other (planned)
-
-| mnemonic | description  | result |
-| -------- | ------------ | ------ |
-| NOP      | no operation |        |
-
-### Basic (planned)
+### Basic
 
 | mnemonic | description                          | result                         |
 | -------- | ------------------------------------ | ------------------------------ |
 | LDHI     | load immediate to register high byte | RX = imm << 8 \| (RX & 0x00ff) |
 | LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)      |
 
-### Arithmetic (planned)
+### Arithmetic
 
 | mnemonic | description           | result       |
 | -------- | --------------------- | ------------ |
@@ -52,7 +34,7 @@
 | DIV      | divide registers      | RX = RY / RZ |
 | REM      | registers remainder   | RX = RY % RZ |
 
-#### Bitwise (planned)
+#### Bitwise
 
 | mnemonic | description | result         |
 | -------- | ----------- | -------------- |
@@ -63,7 +45,7 @@
 | SL       |             | RX = RY << RZ  |
 | SR       |             | RX = RY >> RZ  |
 
-### Branching (planned)
+### Branching
 
 | mnemonic | description | result             |
 | -------- | ----------- | ------------------ |
@@ -73,14 +55,14 @@
 | BRGT     |             | RY > RZ ? PC = RX  |
 | BRLT     |             | RY < RZ ? PC = RX  |
 
-### Memory (planned)
+### Memory
 
 | mnemonic | description | result         |
 | -------- | ----------- | -------------- |
 | LDM      |             | RX = mem\[RY\] |
 | SVM      |             | mem\[RY\] = RX |
 
-### Stack (planned)
+### Stack
 
 | mnemonic | description | result                                   |
 | -------- | ----------- | ---------------------------------------- |
