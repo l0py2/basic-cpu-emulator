@@ -26,6 +26,7 @@ def tokenize(code, instructions, pseudo_instructions, registers):
 
     line_num = 1
     line_start = 0
+    tokens = []
 
     for lexeme in re.finditer(token_regex, code):
         kind = lexeme.lastgroup
@@ -65,6 +66,8 @@ def tokenize(code, instructions, pseudo_instructions, registers):
         elif kind == 'ANY':
             raise RuntimeError(f'"{value}" invalid on line {line_num}')
 
-        yield Token(kind, value, line_num, column)
+        tokens.append(Token(kind, value, line_num, column))
 
-    yield Token('END', '', line_num, column)
+    tokens.append(Token('END', '', line_num, column))
+
+    return tokens

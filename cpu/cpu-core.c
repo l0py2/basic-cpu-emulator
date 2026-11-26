@@ -40,110 +40,132 @@ void setup_cpu(char *path, cpu_t *new_cpu) {
 	read_file(path);
 }
 
-word extract_register(word instruction) {
-	return (instruction & 0x0700) >> 8;
-}
-
-word extract_value(word instruction) {
-	return instruction & 0x00ff;
-}
-
 void execute() {
-	word iregister, ivalue, temp = 0;
+	word iregister1, iregister2, iregister3;
+	word ivalue;
 
-	iregister = extract_register(cpu->memory[cpu->pc]);
-	ivalue = extract_value(cpu->memory[cpu->pc]);
+	ivalue = cpu->memory[cpu->pc] & 0xff;
+	iregister1 = (cpu->memory[cpu->pc] >> 8) & 0b111;
+	iregister2 = ivalue & 0b111;
+	iregister3 = (ivalue >> 3) & 0b111;
 
-	switch(cpu->memory[cpu->pc] & 0b11111 << 11) {
+	switch(cpu->memory[cpu->pc] & (0b11111 << 11)) {
 		case NOP:
 			cpu->pc++;
 			break;
 		case LDHI:
-			cpu->registers[iregister] =
-				(ivalue << 8)
-				| (cpu->registers[iregister] & 0x00ff);
+			cpu->registers[iregister1] = (ivalue << 8) | (cpu->registers[iregister1] & 0xff);
 			cpu->pc++;
 			break;
 		case LDLI:
-			cpu->registers[iregister] =
-				ivalue
-				| (cpu->registers[iregister] & 0xff00);
+			cpu->registers[iregister1] = ivalue | (cpu->registers[iregister1] & 0xff00);
 			cpu->pc++;
 			break;
-		case ADDI:
-			// Preserve signal
-			if(ivalue & 0b10000000) {
-				ivalue |= 0xff00;
-			}
-
-			cpu->registers[iregister] += ivalue;
+		case ADD:
+			cpu->registers[iregister1] = cpu->registers[iregister2] + cpu->registers[iregister3];
 			cpu->pc++;
 			break;
-		case RJUMP:
-			if(ivalue & 0b10000000) {
-				ivalue |= 0xff00;
+		case SUB:
+			cpu->registers[iregister1] = cpu->registers[iregister2] - cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case NEG:
+			cpu->registers[iregister1] = -cpu->registers[iregister2];
+			cpu->pc++;
+			break;
+		case MULT:
+			cpu->registers[iregister1] = cpu->registers[iregister2] * cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case DIV:
+			cpu->registers[iregister1] = cpu->registers[iregister2] / cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case REM:
+			cpu->registers[iregister1] = cpu->registers[iregister2] % cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case NOT:
+			cpu->registers[iregister1] = ~cpu->registers[iregister2];
+			cpu->pc++;
+			break;
+		case AND:
+			cpu->registers[iregister1] = cpu->registers[iregister2] & cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case OR:
+			cpu->registers[iregister1] = cpu->registers[iregister2] | cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case XOR:
+			cpu->registers[iregister1] = cpu->registers[iregister2] ^ cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case SL:
+			cpu->registers[iregister1] = cpu->registers[iregister2] << cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case SR:
+			cpu->registers[iregister1] = cpu->registers[iregister2] >> cpu->registers[iregister3];
+			cpu->pc++;
+			break;
+		case JUMP:
+			cpu->pc = cpu->registers[iregister1];
+			break;
+		case BREQ:
+			if(cpu->registers[iregister2] == cpu->registers[iregister3]) {
+				cpu->pc = cpu->registers[iregister1];
+			} else {
+				cpu->pc++;
 			}
-
-			cpu->pc += ivalue;
+			break;
+		case BRNE:
+			if(cpu->registers[iregister2] != cpu->registers[iregister3]) {
+				cpu->pc = cpu->registers[iregister1];
+			} else {
+				cpu->pc++;
+			}
+			break;
+		case BRGT:
+			if(cpu->registers[iregister2] > cpu->registers[iregister3]) {
+				cpu->pc = cpu->registers[iregister1];
+			} else {
+				cpu->pc++;
+			}
+			break;
+		case BRLT:
+			if(cpu->registers[iregister2] < cpu->registers[iregister3]) {
+				cpu->pc = cpu->registers[iregister1];
+			} else {
+				cpu->pc++;
+			}
 			break;
 		case LDM:
-			cpu->registers[iregister] = cpu->memory[cpu->registers[extract_register(ivalue << 8)]];
+			cpu->registers[iregister1] = cpu->memory[cpu->registers[iregister2]];
 			cpu->pc++;
 			break;
 		case SVM:
-			cpu->memory[cpu->registers[iregister]] = cpu->registers[extract_register(ivalue << 8)];
+			cpu->memory[cpu->registers[iregister2]] = cpu->registers[iregister1];
 			cpu->pc++;
 			break;
 		case PUSH:
-			cpu->memory[cpu->sp] = cpu->registers[iregister];
+			cpu->memory[cpu->sp] = cpu->registers[iregister1];
 			cpu->sp--;
 			cpu->pc++;
 			break;
 		case POP:
 			cpu->sp++;
-			cpu->registers[iregister] = cpu->memory[cpu->sp];
+			cpu->registers[iregister1] = cpu->memory[cpu->sp];
 			cpu->pc++;
 			break;
-		case RCALL:
-			if(ivalue & 0b10000000) {
-				ivalue |= 0xff00;
-			}
-
+		case CALL:
 			cpu->memory[cpu->sp] = cpu->pc + 1;
 			cpu->sp--;
-			cpu->pc += ivalue;
+			cpu->pc = cpu->registers[iregister1];
 			break;
 		case RET:
 			cpu->sp++;
 			cpu->pc = cpu->memory[cpu->sp];
-			break;
-		case RBREZ:
-			if(cpu->registers[iregister] != 0) {
-				cpu->pc++;
-				break;
-			}
-
-			if(ivalue & 0b10000000) {
-				ivalue |= 0xff00;
-			}
-
-			cpu->memory[cpu->sp] = cpu->pc + 1;
-			cpu->sp--;
-			cpu->pc += ivalue;
-			break;
-		case RBRNZ:
-			if(cpu->registers[iregister] == 0) {
-				cpu->pc++;
-				break;
-			}
-
-			if(ivalue & 0b10000000) {
-				ivalue |= 0xff00;
-			}
-
-			cpu->memory[cpu->sp] = cpu->pc + 1;
-			cpu->sp--;
-			cpu->pc += ivalue;
 			break;
 		default:
 			printf("Unknown instruction: %4X\n", cpu->memory[cpu->pc]);

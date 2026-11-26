@@ -13,7 +13,10 @@ view-%: %.bin
 	hexdump -x $<
 
 run-%: %.bin auto-cpu
-	./cpu $<
+	./auto-cpu $<
+
+debug-%: %.bin debug-cpu
+	./debug-cpu $<
 
 debug-cpu: $(OUT_DIR)/cpu.o $(OUT_DIR)/cpu-ui.o $(OUT_DIR)/cpu-core.o
 	$(CC) `pkg-config --libs ncurses` -o $@ $^

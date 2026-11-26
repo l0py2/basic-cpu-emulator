@@ -8,3 +8,5 @@
 - [ ] Support for signed values and operations
 - [ ] Branch if register is zero
 - [ ] Convert SP register to a general register
+- [ ] Memory mapped terminal 80x20 cells
+- [ ] Clock based on a flag for example: cycle == true ? execute n instructions and cycle = false

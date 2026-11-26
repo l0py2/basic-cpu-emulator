@@ -28,18 +28,18 @@
 | RBREZ    | relative branch if register is equal to 0     | RX == 0 ? PC = PC + imm           |
 | RBRNZ    | relative branch if register is not equal to 0 | RX == 0 ? PC = PC + imm           |
 
+### Other (planned)
+
+| mnemonic | description  | result |
+| -------- | ------------ | ------ |
+| NOP      | no operation |        |
+
 ### Basic (planned)
 
 | mnemonic | description                          | result                         |
 | -------- | ------------------------------------ | ------------------------------ |
 | LDHI     | load immediate to register high byte | RX = imm << 8 \| (RX & 0x00ff) |
 | LDLI     | load immediate to register low byte  | RX = imm \| (RX & 0xff00)      |
-
-### Other (planned)
-
-| mnemonic | description  | result |
-| -------- | ------------ | ------ |
-| NOP      | no operation |        |
 
 ### Arithmetic (planned)
 
@@ -60,8 +60,6 @@
 | AND      |             | RX = RY & RZ   |
 | OR       |             | RX = RY \| RZ  |
 | XOR      |             | RX = RY ^ RZ   |
-| SLI      |             | RX = RX << imm |
-| SRI      |             | RX = RX >> imm |
 | SL       |             | RX = RY << RZ  |
 | SR       |             | RX = RY >> RZ  |
 
