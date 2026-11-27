@@ -18,7 +18,7 @@ run-%: %.bin auto-cpu
 debug-%: %.bin debug-cpu
 	./debug-cpu $<
 
-debug-cpu: $(OUT_DIR)/cpu.o $(OUT_DIR)/cpu-ui.o $(OUT_DIR)/cpu-core.o
+debug-cpu: $(OUT_DIR)/debug-cpu.o $(OUT_DIR)/cpu-ui.o $(OUT_DIR)/cpu-core.o
 	$(CC) `pkg-config --libs ncurses` -o $@ $^
 
 auto-cpu: $(OUT_DIR)/auto-cpu.o $(OUT_DIR)/cpu-core.o
@@ -30,8 +30,9 @@ char-display: $(OUT_DIR)/char-display.o
 display: $(OUT_DIR)/display.o
 	$(CC) `pkg-config --libs raylib` -o $@ $^
 
-$(OUT_DIR)/cpu.o: cpu/cpu.c cpu/is.h cpu/cpu-ui.h cpu/cpu-core.h
-$(OUT_DIR)/auto-cpu.o: cpu/cpu.c cpu/is.h cpu/cpu-core.h
+$(OUT_DIR)/debug-cpu.o: cpu/debug-cpu.c cpu/is.h cpu/cpu-ui.h cpu/cpu-core.h
+$(OUT_DIR)/auto-cpu.o: cpu/auto-cpu.c cpu/is.h cpu/cpu-core.h
+
 $(OUT_DIR)/cpu-core.o: cpu/cpu-core.c cpu/is.h
 $(OUT_DIR)/cpu-ui.o: cpu/cpu-ui.c cpu/is.h
 
