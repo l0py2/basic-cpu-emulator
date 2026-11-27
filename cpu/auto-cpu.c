@@ -10,8 +10,6 @@
 #include "is.h"
 #include "cpu-core.h"
 
-#define CLOCK_RATE_MICS 10000
-
 void setup_signal_handling();
 void setup_shared_memory();
 
@@ -32,9 +30,26 @@ int main(int argc, char **argv) {
 
 	setup_cpu(argv[1], cpu);
 
+	int instruction_count = 0;
+
 	while(!exit_program) {
-		usleep(CLOCK_RATE_MICS);
+		if(cpu->instructions_per_cycle == 0) {
+			execute();
+			continue;
+		}
+
+		if(cpu->cycle_signal == 0) {
+			continue;
+		}
+
+		if(instruction_count > cpu->instructions_per_cycle) {
+			instruction_count = 0;
+			cpu->cycle_signal = 0;
+			continue;
+		}
+
 		execute();
+		instruction_count++;
 	}
 
 	return 0;

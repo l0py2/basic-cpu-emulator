@@ -9,6 +9,7 @@
 #define SCREEN_WIDTH 400
 #define SCREEN_HEIGHT 400
 #define PIXEL_SIZE 40
+#define TARGET_FPS 10
 
 #define DISPLAY_ROWS (SCREEN_HEIGHT / PIXEL_SIZE)
 #define DISPLAY_COLS (SCREEN_WIDTH / PIXEL_SIZE)
@@ -19,14 +20,14 @@ void draw_pixels(word display[DISPLAY_ROWS][DISPLAY_COLS]);
 static cpu_t *cpu = NULL;
 
 int main(void) {
-	int cpu_fd = shm_open("/basic-cpu-emu", O_RDONLY, 0);
+	int cpu_fd = shm_open("/basic-cpu-emu", O_RDWR, 0);
 
 	if(cpu_fd < 0) {
 		printf("Failed to open shared memory object\n");
 		return 1;
 	}
 
-	cpu = mmap(NULL, sizeof(cpu_t), PROT_READ, MAP_SHARED, cpu_fd, 0);
+	cpu = mmap(NULL, sizeof(cpu_t), PROT_READ | PROT_WRITE, MAP_SHARED, cpu_fd, 0);
 	close(cpu_fd);
 
 	if(cpu == MAP_FAILED) {
@@ -34,12 +35,17 @@ int main(void) {
 		return 1;
 	}
 
+	cpu->instructions_per_cycle = TARGET_FPS * 1000;
+	cpu->cycle_signal = 1;
+
 	word display[DISPLAY_ROWS][DISPLAY_COLS] = { 0 };
 
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Display");
-	SetTargetFPS(10);
+	SetTargetFPS(TARGET_FPS);
 
 	while(!WindowShouldClose()) {
+		cpu->cycle_signal = 1;
+
 		read_display(display);
 
 		BeginDrawing();

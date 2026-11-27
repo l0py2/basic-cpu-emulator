@@ -37,6 +37,9 @@ void setup_cpu(char *path, cpu_t *new_cpu) {
 		cpu->registers[i] = 0;
 	}
 
+	cpu->cycle_signal = 0;
+	cpu->instructions_per_cycle = 0;
+
 	read_file(path);
 }
 

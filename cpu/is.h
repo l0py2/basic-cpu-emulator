@@ -50,11 +50,13 @@ typedef enum {
 } rx;
 
 typedef struct {
+	pid_t cpu_pid;
 	word pc;
 	word sp;
 	word memory[MEMORY_SIZE];
 	word registers[REGISTER_COUNT];
-	pid_t cpu_pid;
+	int cycle_signal;
+	int instructions_per_cycle;
 } cpu_t;
 
 #endif

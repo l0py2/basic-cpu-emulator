@@ -127,6 +127,25 @@ class Generator:
                                 self.instructions['JUMP']
                                 | self.consume_register() << 8
                             )
+                        case 'BRNE':
+                            self.program.append(
+                                self.instructions['BRNE']
+                                | self.consume_register() << 8
+                                | self.consume_register() << 3
+                                | self.consume_register()
+                            )
+                        case 'LDM':
+                            self.program.append(
+                                self.instructions['LDM']
+                                | self.consume_register() << 8
+                                | self.consume_register()
+                            )
+                        case 'SVM':
+                            self.program.append(
+                                self.instructions['SVM']
+                                | self.consume_register() << 8
+                                | self.consume_register()
+                            )
                         case _:
                             raise RuntimeError(f'Unknown instruction "{current_token.value}"')
 
